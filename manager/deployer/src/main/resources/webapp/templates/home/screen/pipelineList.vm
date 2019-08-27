@@ -79,6 +79,7 @@ $control.setTemplate("home:navigation.vm")
             <th width="6%">Pipeline名字</th>
 			<th width="3%">并行度</th>
 			<th width="3%">主站点</th>
+			<th width="3%">ddl同步</th>
 			<th width="5%">mainstem状态</th>
 			<th width="5%">延迟时间</th>
 			<th width="8%">最后同步时间</th>
@@ -103,6 +104,13 @@ $control.setTemplate("home:navigation.vm")
       </td>
 	  <td width="3%">$pipeline.parameters.parallelism</td>
 	  <td width="3%">$pipeline.parameters.home</td>
+        <td width="3%">
+            #if($pipeline.parameters.getDdlSync())
+                是
+            #else
+                否
+            #end
+        </td>
 	  <td width="5%">
 		#set($mainstemData = $mainstemDatas.get($pipeline.id))
 		#if(!$mainstemData)
