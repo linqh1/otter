@@ -73,4 +73,34 @@ public class SeniorCanal extends Canal {
             return address.toString();
         }
     }
+
+    /**
+     * 新增的方法,显示原本的url串
+     * @return
+     */
+    public String getOriginalUrl() {
+        CanalParameter parameter = getCanalParameter();
+        if (parameter.getHaMode().isMedia()) {
+            return "media://" + parameter.getMediaGroup();
+        } else {
+            StringBuilder address = new StringBuilder("jdbc://");
+            for (List<DataSourcing> groupAddress : parameter.getGroupDbAddresses()) {
+                int i = 0;
+                for (DataSourcing dbAddress : groupAddress) {
+                    ++i;
+                    address.append(dbAddress.getDbAddress().getAddress().getHostAddress())
+                            .append(":")
+                            .append(dbAddress.getDbAddress().getPort());
+
+                    if (i < groupAddress.size()) {
+                        address.append(',');
+                    }
+                }
+
+                address.append(';');
+            }
+
+            return address.toString();
+        }
+    }
 }

@@ -52,7 +52,7 @@ $control.setTemplate("home:navigation.vm")
 				<td width="5%">$!seniorCanal.name</td>
 				<td width="5%">$!seniorCanal.canalParameter.sourcingType</td>
 				<td width="5%">$!seniorCanal.canalParameter.connectionCharset</td>
-				<td width="5%">$!seniorCanal.getUrl()</td>
+				<td width="5%">$!seniorCanal.getOriginalUrl()</td>
 				<td>
 					#set ($canalInfoURL = $homeModule.setTarget("canalInfo.vm").addQueryData("canalId", $seniorCanal.id))
 					<a href="$canalInfoURL"><img src="images/ico_edit.png" width="13" height="13" /><span class="ico_font">查看</span></a>
