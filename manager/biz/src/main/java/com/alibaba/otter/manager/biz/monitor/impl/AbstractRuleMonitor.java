@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import com.alibaba.otter.manager.biz.monitor.AlarmParameter;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -75,7 +76,8 @@ public abstract class AbstractRuleMonitor implements Monitor, PassiveMonitor {
         throw new UnsupportedOperationException();
     }
 
-    protected void sendAlarm(AlarmRule rule, String message) {
+    protected void sendAlarm(AlarmRule rule, AlarmParameter parameter) {
+        String message = parameter.getMessage();
         AlarmMessage data = new AlarmMessage();
         data.setMessage(message);
         data.setReceiveKey(rule.getReceiverKey());

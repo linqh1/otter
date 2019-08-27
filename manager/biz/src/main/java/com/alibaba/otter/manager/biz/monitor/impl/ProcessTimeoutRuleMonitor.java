@@ -25,6 +25,7 @@ import java.util.Map.Entry;
 
 import javax.annotation.Resource;
 
+import com.alibaba.otter.manager.biz.monitor.AlarmParameter;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -111,7 +112,7 @@ public class ProcessTimeoutRuleMonitor extends AbstractRuleMonitor {
 
         String processIds = StringUtils.join(timeoutProcessIds, ",");
         String message = String.format(TIME_OUT_MESSAGE, rule.getPipelineId(), processIds, (maxSpent / 1000));
-        sendAlarm(rule, message);
+        sendAlarm(rule, new AlarmParameter(MonitorName.PROCESSTIMEOUT,maxSpent/1000,message));
         return message;
     }
 }

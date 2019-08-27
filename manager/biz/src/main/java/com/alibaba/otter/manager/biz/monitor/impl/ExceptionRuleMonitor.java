@@ -22,6 +22,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import com.alibaba.otter.manager.biz.monitor.AlarmParameter;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -100,7 +101,7 @@ public class ExceptionRuleMonitor extends AbstractRuleMonitor {
             if (StringUtils.containsIgnoreCase(alarmEvent.getMessage(), match)) {
                 String message = String.format(MESAGE_FORMAT, alarmEvent.getPipelineId(), alarmEvent.getNid(),
                                                alarmEvent.getMessage());
-                sendAlarm(rule, message);
+                sendAlarm(rule, new AlarmParameter(MonitorName.EXCEPTION,message));
                 break;
             }
         }

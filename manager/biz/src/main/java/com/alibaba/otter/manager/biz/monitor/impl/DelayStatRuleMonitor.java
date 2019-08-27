@@ -19,6 +19,7 @@ package com.alibaba.otter.manager.biz.monitor.impl;
 import java.util.Date;
 import java.util.List;
 
+import com.alibaba.otter.manager.biz.monitor.AlarmParameter;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.util.CollectionUtils;
 
@@ -89,7 +90,7 @@ public class DelayStatRuleMonitor extends AbstractRuleMonitor {
         matchValue = StringUtils.substringBeforeLast(matchValue, "@");
         Long maxDelayTime = Long.parseLong(StringUtils.trim(matchValue));
         if (delayTime >= maxDelayTime) {
-            sendAlarm(rule, String.format(DELAY_TIME_MESSAGE, rule.getPipelineId(), delayTime));
+            sendAlarm(rule, new AlarmParameter(MonitorName.DELAYTIME,delayTime,String.format(DELAY_TIME_MESSAGE, rule.getPipelineId(), delayTime)));
             return true;
         }
         return false;
