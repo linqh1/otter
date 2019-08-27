@@ -22,7 +22,7 @@
 				<prop key="mail.smtp.port">${otter.manager.monitor.email.stmp.port:465}</prop>
 				<prop key="mail.smtp.socketFactory.port">${otter.manager.monitor.email.stmp.port:465}</prop>
 				<prop key="mail.smtp.socketFactory.fallback">false</prop>
-				<prop key="mail.smtp.socketFactory.class">javax.net.ssl.SSLSocketFactory</prop>
+				<prop key="mail.smtp.socketFactory.class">#{ '${otter.manager.monitor.email.ssl:false}' == 'true' ? 'javax.net.ssl.SSLSocketFactory' : '' }</prop>
 			</props>
 		</property>
 	</bean>
