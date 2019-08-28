@@ -21,6 +21,7 @@ import java.util.List;
 
 import javax.annotation.Resource;
 
+import com.alibaba.otter.manager.biz.common.alarm.FalconAgentAlarmService;
 import com.alibaba.otter.manager.biz.monitor.AlarmParameter;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
@@ -49,6 +50,9 @@ public abstract class AbstractRuleMonitor implements Monitor, PassiveMonitor {
 
     @Resource(name = "alarmService")
     private AbstractAlarmService  alarmService;
+
+    @Resource(name = "falconAgent")
+    private FalconAgentAlarmService falconAgentAlarmService;
 
     @Resource(name = "logRecordService")
     private LogRecordService      logRecordService;
@@ -90,6 +94,7 @@ public abstract class AbstractRuleMonitor implements Monitor, PassiveMonitor {
             return;
         }
         alarmService.sendAlarm(data);
+        falconAgentAlarmService.send(data,parameter);
         log.info("has send alarm : " + data + "; rule is " + rule);
     }
 

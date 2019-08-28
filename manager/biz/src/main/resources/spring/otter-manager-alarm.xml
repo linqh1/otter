@@ -31,4 +31,8 @@
 		<property name="mailSender" ref="mailSender" />
 		<property name="username" value="${otter.manager.monitor.email.username}" />
 	</bean>
+
+	<bean id="falconAgent" class="com.alibaba.otter.manager.biz.common.alarm.FalconAgentAlarmService">
+		<constructor-arg value="${otter.manager.monitor.falcon-agent}"></constructor-arg>
+	</bean>
 </beans>
