@@ -112,7 +112,10 @@ public class ProcessTimeoutRuleMonitor extends AbstractRuleMonitor {
 
         String processIds = StringUtils.join(timeoutProcessIds, ",");
         String message = String.format(TIME_OUT_MESSAGE, rule.getPipelineId(), processIds, (maxSpent / 1000));
-        sendAlarm(rule, new AlarmParameter(MonitorName.PROCESSTIMEOUT,maxSpent/1000,message));
+        Map<String,String> tags = new HashMap<String, String>();
+        tags.put("pipelineId",rule.getPipelineId().toString());
+        tags.put("processIds",processIds);
+        sendAlarm(rule, new AlarmParameter(MonitorName.PROCESSTIMEOUT,maxSpent/1000,message,tags));
         return message;
     }
 }

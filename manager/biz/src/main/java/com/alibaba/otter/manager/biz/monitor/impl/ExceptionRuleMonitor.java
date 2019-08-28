@@ -16,9 +16,7 @@
 
 package com.alibaba.otter.manager.biz.monitor.impl;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 
 import javax.annotation.Resource;
 
@@ -101,7 +99,10 @@ public class ExceptionRuleMonitor extends AbstractRuleMonitor {
             if (StringUtils.containsIgnoreCase(alarmEvent.getMessage(), match)) {
                 String message = String.format(MESAGE_FORMAT, alarmEvent.getPipelineId(), alarmEvent.getNid(),
                                                alarmEvent.getMessage());
-                sendAlarm(rule, new AlarmParameter(MonitorName.EXCEPTION,message));
+                Map<String,String> tags = new HashMap<String, String>();
+                tags.put("pipelineId",rule.getPipelineId().toString());
+                tags.put("nodeId",alarmEvent.getNid().toString());
+                sendAlarm(rule, new AlarmParameter(MonitorName.EXCEPTION,message,tags));
                 break;
             }
         }

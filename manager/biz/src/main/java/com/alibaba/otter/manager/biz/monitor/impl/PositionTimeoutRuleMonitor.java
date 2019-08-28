@@ -17,7 +17,9 @@
 package com.alibaba.otter.manager.biz.monitor.impl;
 
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.alibaba.otter.manager.biz.monitor.AlarmParameter;
 import org.apache.commons.lang.StringUtils;
@@ -88,7 +90,9 @@ public class PositionTimeoutRuleMonitor extends AbstractRuleMonitor {
         Long maxSpentTime = Long.parseLong(StringUtils.trim(matchValue));
         // sinceLastSync是毫秒，而 maxSpentTime 是秒
         if (elapsed >= (maxSpentTime * 1000)) {
-            sendAlarm(rule, new AlarmParameter(MonitorName.POSITIONTIMEOUT,elapsed / 1000,String.format(TIME_OUT_MESSAGE, rule.getPipelineId(), (elapsed / 1000))));
+            Map<String,String> tags = new HashMap<String, String>();
+            tags.put("pipelineId",rule.getPipelineId().toString());
+            sendAlarm(rule, new AlarmParameter(MonitorName.POSITIONTIMEOUT,elapsed / 1000,String.format(TIME_OUT_MESSAGE, rule.getPipelineId(), (elapsed / 1000)),tags));
             return true;
         }
         return false;
