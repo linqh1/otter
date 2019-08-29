@@ -1,8 +1,10 @@
 package com.alibaba.otter.manager.biz.common.alarm;
 
 import com.alibaba.fastjson.JSON;
+import com.alibaba.otter.manager.biz.common.util.EncryptUtil;
 import com.alibaba.otter.manager.biz.monitor.AlarmParameter;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpStatus;
 import org.apache.http.ParseException;
 import org.apache.http.client.ClientProtocolException;
@@ -19,7 +21,8 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.nio.charset.Charset;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 /**
  * 将告警服务推送到falcon agent
@@ -27,6 +30,7 @@ import java.util.Map;
 public class FalconAgentAlarmService {
 
     private static final Logger logger = LoggerFactory.getLogger(FalconAgentAlarmService.class);
+    public final static String RFC1123_PATTERN = "EEE, dd MMM yyyy HH:mm:ss z";
     private static final CloseableHttpClient httpClient = HttpClients
             .custom()
             .setDefaultRequestConfig(RequestConfig
@@ -37,8 +41,23 @@ public class FalconAgentAlarmService {
                     .build())
             .build();
     private static final String metric = "otter-alarm";
+    private static SimpleDateFormat simpleDateFormat = new SimpleDateFormat(RFC1123_PATTERN, Locale.US);
+    static {
+        simpleDateFormat.setTimeZone(new SimpleTimeZone(0, "GMT"));
+    }
+
     private boolean urlset;
     private String url;
+    private String user;
+    private String key;
+
+    public void setUser(String user) {
+        this.user = user;
+    }
+
+    public void setKey(String key) {
+        this.key = key;
+    }
 
     public FalconAgentAlarmService(String url) {
         this.url = url;
@@ -72,7 +91,9 @@ public class FalconAgentAlarmService {
             logger.error("call falcon api error!{}",e);
         } catch (ParseException e) {
             logger.error("falcon api response parse error!{}",e);
-        } finally {
+        } catch (Exception e){
+            logger.error("exception when do falcon-agent api call! {}",e);
+        }finally {
             if (post != null) {
                 post.releaseConnection();
             }
@@ -85,11 +106,10 @@ public class FalconAgentAlarmService {
      * @param parameter
      * @return
      */
-    private HttpPost buildRequest(AlarmMessage message, AlarmParameter parameter) {
+    private HttpPost buildRequest(AlarmMessage message, AlarmParameter parameter) throws Exception{
         HttpPost post = new HttpPost(url);
-        post.setHeader("Content-type", "application/json; charset=utf-8");
-        post.setHeader("Connection", "Close");
-        FalconAlertData data = generateAlertData(message,parameter);
+        fillHeader(post);
+        List<FalconAlertData> data = generateAlertData(message,parameter);
         String jsonStr = JSON.toJSONString(data);
         logger.info("data to send to falcon agent: {}",jsonStr);
         StringEntity entity = new StringEntity(jsonStr, Charset.forName("UTF-8"));
@@ -98,13 +118,31 @@ public class FalconAgentAlarmService {
         return post;
     }
 
+    private void fillHeader(HttpPost request) throws Exception{
+        request.addHeader(HttpHeaders.CONTENT_TYPE,"application/json; charset=utf-8");
+        request.setHeader(HttpHeaders.CONNECTION,"Close");
+        // user和key都非空的时候才添加请求头
+        if (StringUtils.isNotBlank(key) && StringUtils.isNotBlank(user)) {
+            String formatDate = "";
+            Date now = new Date();
+            synchronized (simpleDateFormat) {
+                formatDate = simpleDateFormat.format(now);
+            }
+            String password = EncryptUtil.signHmacSHA1(key,formatDate);
+            String authorizationString = EncryptUtil.toBase64String((user + ":" + password).getBytes(Charset.forName("UTF-8")));
+            request.addHeader(HttpHeaders.DATE,formatDate);
+            request.addHeader(HttpHeaders.AUTHORIZATION,"Basic " + authorizationString);
+        }
+    }
+
     /**
      * 生成报警数据
      * @param message
      * @param parameter
      * @return
      */
-    private FalconAlertData generateAlertData(AlarmMessage message, AlarmParameter parameter) {
+    private List<FalconAlertData> generateAlertData(AlarmMessage message, AlarmParameter parameter) {
+        List<FalconAlertData> list = new ArrayList<FalconAlertData>();
         FalconAlertData result = new FalconAlertData();
         result.setMetric(metric);
         result.setValue(parameter.getSecondTimes());
@@ -125,9 +163,9 @@ public class FalconAgentAlarmService {
             }
         }
         result.setTags(tagstr.toString());
-        return result;
+        list.add(result);
+        return list;
     }
-
 
     private static class FalconAlertData {
 

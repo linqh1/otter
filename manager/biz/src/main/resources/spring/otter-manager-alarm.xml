@@ -34,5 +34,7 @@
 
 	<bean id="falconAgent" class="com.alibaba.otter.manager.biz.common.alarm.FalconAgentAlarmService">
 		<constructor-arg value="${otter.manager.monitor.falcon-agent}"></constructor-arg>
+		<property name="user" value="${otter.manager.monitor.falcon-agent.user}"/>
+		<property name="key" value="${otter.manager.monitor.falcon-agent.key}"/>
 	</bean>
 </beans>
