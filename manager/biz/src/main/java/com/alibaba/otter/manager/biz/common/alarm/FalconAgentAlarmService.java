@@ -155,12 +155,14 @@ public class FalconAgentAlarmService {
         result.setCounterType("GAUGE");
         result.setStep(60);
         StringBuilder tagstr = new StringBuilder("DataType=alarmData,");
-        tagstr.append("type=").append(parameter.getType()).append(",");
+        tagstr.append("Type=").append(parameter.getType()).append(",");
         Map<String,String> tagmap = parameter.getTags();
-        if (tagmap != null) {
+        if (tagmap != null && tagmap.keySet().size()>0) {
+            tagstr.append("Param=");
             for (String key:tagmap.keySet()) {
-                tagstr.append(key).append("=").append(tagmap.get(key)).append(",");
+                tagstr.append(key).append(":").append(tagmap.get(key)).append("|");
             }
+            tagstr.deleteCharAt(tagstr.length()-1);
         }
         result.setTags(tagstr.toString());
         list.add(result);
