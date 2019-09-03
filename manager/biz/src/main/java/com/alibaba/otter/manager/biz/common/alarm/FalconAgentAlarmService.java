@@ -160,7 +160,7 @@ public class FalconAgentAlarmService {
         if (tagmap != null && tagmap.keySet().size()>0) {
             tagstr.append("Param=");
             for (String key:tagmap.keySet()) {
-                tagstr.append(key).append(":").append(tagmap.get(key)).append("|");
+                tagstr.append(key).append(":").append(tagmap.get(key)).append(" ");
             }
             tagstr.deleteCharAt(tagstr.length()-1);
         }
