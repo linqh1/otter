@@ -36,5 +36,8 @@
 		<constructor-arg value="${otter.manager.monitor.falcon-agent}"></constructor-arg>
 		<property name="user" value="${otter.manager.monitor.falcon-agent.user}"/>
 		<property name="key" value="${otter.manager.monitor.falcon-agent.key}"/>
+		<property name="pipelineDao">
+			<ref bean="pipelineDao" />
+		</property>
 	</bean>
 </beans>

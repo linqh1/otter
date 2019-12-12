@@ -2,6 +2,8 @@ package com.alibaba.otter.manager.biz.common.alarm;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.otter.manager.biz.common.util.EncryptUtil;
+import com.alibaba.otter.manager.biz.config.pipeline.dal.PipelineDAO;
+import com.alibaba.otter.manager.biz.config.pipeline.dal.dataobject.PipelineDO;
 import com.alibaba.otter.manager.biz.monitor.AlarmParameter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHeaders;
@@ -50,6 +52,7 @@ public class FalconAgentAlarmService {
     private String url;
     private String user;
     private String key;
+    private PipelineDAO pipelineDao;
 
     public void setUser(String user) {
         this.user = user;
@@ -57,6 +60,10 @@ public class FalconAgentAlarmService {
 
     public void setKey(String key) {
         this.key = key;
+    }
+
+    public void setPipelineDao(PipelineDAO pipelineDao) {
+        this.pipelineDao = pipelineDao;
     }
 
     public FalconAgentAlarmService(String url) {
@@ -158,15 +165,28 @@ public class FalconAgentAlarmService {
         tagstr.append("Type=").append(parameter.getType()).append(",");
         Map<String,String> tagmap = parameter.getTags();
         if (tagmap != null && tagmap.keySet().size()>0) {
-            tagstr.append("Param=");
+            fillChannelId(tagmap);
+            StringBuilder paramBuilder = new StringBuilder();
             for (String key:tagmap.keySet()) {
-                tagstr.append(key).append(":").append(tagmap.get(key)).append(" ");
+                String value = tagmap.get(key).replace(",","_");
+                tagstr.append(key).append("=").append(value).append(",");
+                paramBuilder.append(key).append(":").append(value);
             }
-            tagstr.deleteCharAt(tagstr.length()-1);
+            tagstr.append("Param=").append(paramBuilder.toString());
         }
         result.setTags(tagstr.toString());
         list.add(result);
         return list;
+    }
+
+    private void fillChannelId(Map<String,String> tags) {
+        if (tags.containsKey("pipelineId") && !tags.containsKey("channelId")) {
+            String pipelineId = tags.get("pipelineId");
+            PipelineDO pipeline = pipelineDao.findById(Long.valueOf(pipelineId));
+            if (pipeline != null) {
+                tags.put("channelId",String.valueOf(pipeline.getChannelId()));
+            }
+        }
     }
 
     private static class FalconAlertData {
