@@ -112,25 +112,11 @@
 	<!-- 权限配置 -->
 	<beans:bean id="urlAnalyze"
 		class="com.alibaba.otter.manager.web.webx.valve.auth.RegExpURLAnalyze">
-		<beans:property name="anonymous">
+		<beans:property name="operator">
 			<beans:bean
 				class="com.alibaba.otter.manager.web.webx.valve.auth.AuthorizeProtected">
 				<beans:property name="urlProtected">
 					<beans:value>
-						/
-						/dwr/.*
-						/js/.*
-						/css/.*
-						/images/.*
-						/monitor/.*
-						/.*\.css
-						/.*\.png
-						/.*\.js
-						/.*login\.htm
-						/.*error\.htm
-						/.*Error\.htm
-						/.*\_error\.htm
-						/.*forbidden\.htm
 						/.*check.*\.htm
 						/.*conflictStatList\.htm
 						/.*conflict_stat_list\.htm
@@ -154,24 +140,36 @@
 				</beans:property>
 				<beans:property name="actionProtected">
 					<beans:value>
-						userAction|login
 						userAction|logout
 						.*Action|search
 					</beans:value>
 				</beans:property>
 			</beans:bean>
 		</beans:property>
-		<beans:property name="operator">
+		<beans:property name="anonymous">
 			<beans:bean
 				class="com.alibaba.otter.manager.web.webx.valve.auth.AuthorizeProtected">
 				<beans:property name="urlProtected">
 					<beans:value>
-
+						/
+						/dwr/.*
+						/js/.*
+						/css/.*
+						/images/.*
+						/monitor/.*
+						/.*\.css
+						/.*\.png
+						/.*\.js
+						/.*login\.htm
+						/.*error\.htm
+						/.*Error\.htm
+						/.*\_error\.htm
+						/.*forbidden\.htm
 					</beans:value>
 				</beans:property>
 				<beans:property name="actionProtected">
 					<beans:value>
-
+						userAction|login
 					</beans:value>
 				</beans:property>
 			</beans:bean>
@@ -211,7 +209,8 @@
 	
 	<beans:bean class="org.springframework.beans.factory.config.CustomEditorConfigurer" depends-on="arbitrateConfigImpl">  
 	   <beans:property name="customEditors">  
-		    <beans:map>  
+	   <beans:property name="customEditors">
+		    <beans:map>
 		       <beans:entry key="com.alibaba.otter.manager.web.webx.valve.auth.url.URLProtected" value="com.alibaba.otter.manager.web.webx.valve.auth.url.URLProtectedEditor" /> 
 		       <beans:entry key="com.alibaba.otter.manager.web.webx.valve.auth.action.ActionProtected" value="com.alibaba.otter.manager.web.webx.valve.auth.action.ActionProtectedEditor" /> 
 		    </beans:map>
