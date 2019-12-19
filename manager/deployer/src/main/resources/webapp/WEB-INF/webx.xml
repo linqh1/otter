@@ -208,7 +208,6 @@
 	<beans:bean id="apiAuthService" class="com.alibaba.otter.manager.web.common.api.DefaultApiAuthService" />
 	
 	<beans:bean class="org.springframework.beans.factory.config.CustomEditorConfigurer" depends-on="arbitrateConfigImpl">  
-	   <beans:property name="customEditors">  
 	   <beans:property name="customEditors">
 		    <beans:map>
 		       <beans:entry key="com.alibaba.otter.manager.web.webx.valve.auth.url.URLProtected" value="com.alibaba.otter.manager.web.webx.valve.auth.url.URLProtectedEditor" /> 
