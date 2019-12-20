@@ -97,6 +97,7 @@ $control.setTemplate("home:navigation.vm")
       <th>Channel名字</th>
       <th>运行状态</th>
 	  <th>同步方向</th>
+	  <th>pipelines</th>
 	  <th>操作</th>
     </tr>
     
@@ -125,8 +126,32 @@ $control.setTemplate("home:navigation.vm")
 					#end
 				#end
 			</td>
-	     
-		  
+			<td>
+				#if($channel.pipelines.size() == 0) 无
+				#elseif($channel.pipelines.size() == 1)
+					#set ($pname = "[" + $channel.pipelines.get(0).name + "]")
+					#if ($channel.pipelines.get(0).parameters.ddlSync)
+						#set ($pname = $pname + ("(ddl)"))
+					#end
+					$pname
+				#elseif($channel.pipelines.size() == 2)
+					#set ($p1 = "[" + $channel.pipelines.get(0).name + "]")
+					#set ($p2 = "[" + $channel.pipelines.get(1).name + "]")
+					#if ($channel.pipelines.get(0).parameters.home)
+						#set ($p1 = $p1 + ("(主)"))
+					#end
+					#if ($channel.pipelines.get(0).parameters.ddlSync)
+						#set ($p1 = $p1 + ("(ddl)"))
+					#end
+					#if ($channel.pipelines.get(1).parameters.home)
+						#set ($p2 = $p2 + ("(主)"))
+					#end
+					#if ($channel.pipelines.get(1).parameters.ddlSync)
+						#set ($p2 = $p2 + ("(ddl)"))
+					#end
+					$p1 - $p2
+				#end
+			</td>
 		  <td><p>
         				#set ($channelInfoURL = $homeModule.setTarget("channelInfo.vm").addQueryData("channelId", $channel.id))
 						<a href="$channelInfoURL"><img src="images/ico_edit.png" width="13" height="13" /><span class="ico_font">查看</span></a>
