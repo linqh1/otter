@@ -127,30 +127,35 @@ $control.setTemplate("home:navigation.vm")
 				#end
 			</td>
 			<td>
+				<p>
 				#if($channel.pipelines.size() == 0) 无
 				#elseif($channel.pipelines.size() == 1)
-					#set ($pname = "[" + $channel.pipelines.get(0).name + "]")
+					#set ($pipeline = $channel.pipelines.get(0))
+					#set ($psuffix="")
 					#if ($channel.pipelines.get(0).parameters.ddlSync)
-						#set ($pname = $pname + ("(ddl)"))
+						#set ($psuffix = "(ddl)")
 					#end
-					$pname
+                    [<a href="dataMediaPairList.htm?pipelineId=$pipeline.id" class="trigger">$pipeline.name</a>$psuffix]
 				#elseif($channel.pipelines.size() == 2)
-					#set ($p1 = "[" + $channel.pipelines.get(0).name + "]")
-					#set ($p2 = "[" + $channel.pipelines.get(1).name + "]")
-					#if ($channel.pipelines.get(0).parameters.home)
-						#set ($p1 = $p1 + ("(主)"))
+					#set ($pipeline1 = $channel.pipelines.get(0))
+					#set ($pipeline2 = $channel.pipelines.get(1))
+					#set ($p1suffix="")
+					#set ($p2suffix="")
+					#if ($pipeline1.parameters.home)
+						#set ($p1suffix = $p1suffix + "(主)")
 					#end
-					#if ($channel.pipelines.get(0).parameters.ddlSync)
-						#set ($p1 = $p1 + ("(ddl)"))
+					#if ($pipeline1.parameters.ddlSync)
+						#set ($p1suffix = $p1suffix + "(ddl)")
 					#end
-					#if ($channel.pipelines.get(1).parameters.home)
-						#set ($p2 = $p2 + ("(主)"))
+					#if ($pipeline2.parameters.home)
+						#set ($p2suffix = $p2suffix + "(主)")
 					#end
-					#if ($channel.pipelines.get(1).parameters.ddlSync)
-						#set ($p2 = $p2 + ("(ddl)"))
+					#if ($pipeline2.parameters.ddlSync)
+						#set ($p2suffix = $p2suffix + "(ddl)")
 					#end
-					$p1 - $p2
+                    [<a href="dataMediaPairList.htm?pipelineId=$pipeline1.id" class="trigger">$pipeline1.name</a>$p1suffix] - [<a href="dataMediaPairList.htm?pipelineId=$pipeline2.id" class="trigger">$pipeline2.name</a>$p2suffix]
 				#end
+                </p>
 			</td>
 		  <td><p>
         				#set ($channelInfoURL = $homeModule.setTarget("channelInfo.vm").addQueryData("channelId", $channel.id))
