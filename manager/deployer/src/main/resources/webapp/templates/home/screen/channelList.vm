@@ -117,7 +117,12 @@ $control.setTemplate("home:navigation.vm")
 	      <td>
 				#if($channel.pipelines.size() == 0) 无 
 				#elseif($channel.pipelines.size() == 1) 单向
-				#elseif($channel.pipelines.size() == 2) 双向
+				#elseif($channel.pipelines.size() == 2)
+					#if ($channel.pipelines.get(0).parameters.home || $channel.pipelines.get(1).parameters.home)
+						双A
+					#else
+						双向
+					#end
 				#end
 			</td>
 	     
