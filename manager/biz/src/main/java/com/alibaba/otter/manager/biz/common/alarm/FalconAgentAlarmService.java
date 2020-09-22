@@ -2,6 +2,8 @@ package com.alibaba.otter.manager.biz.common.alarm;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.otter.manager.biz.common.util.EncryptUtil;
+import com.alibaba.otter.manager.biz.config.channel.dal.ChannelDAO;
+import com.alibaba.otter.manager.biz.config.channel.dal.dataobject.ChannelDO;
 import com.alibaba.otter.manager.biz.config.pipeline.dal.PipelineDAO;
 import com.alibaba.otter.manager.biz.config.pipeline.dal.dataobject.PipelineDO;
 import com.alibaba.otter.manager.biz.monitor.AlarmParameter;
@@ -53,6 +55,7 @@ public class FalconAgentAlarmService {
     private String user;
     private String key;
     private PipelineDAO pipelineDao;
+    private ChannelDAO channelDao;
 
     public void setUser(String user) {
         this.user = user;
@@ -64,6 +67,10 @@ public class FalconAgentAlarmService {
 
     public void setPipelineDao(PipelineDAO pipelineDao) {
         this.pipelineDao = pipelineDao;
+    }
+
+    public void setChannelDao(ChannelDAO channelDao) {
+        this.channelDao = channelDao;
     }
 
     public FalconAgentAlarmService(String url) {
@@ -185,6 +192,17 @@ public class FalconAgentAlarmService {
             PipelineDO pipeline = pipelineDao.findById(Long.valueOf(pipelineId));
             if (pipeline != null) {
                 tags.put("channelId",String.valueOf(pipeline.getChannelId()));
+            }
+        }
+        if (tags.containsKey("channelId")) {
+            String channelId = tags.get("channelId");
+            try {
+                ChannelDO channel = channelDao.findById(Long.valueOf(channelId));
+                if (channel != null) {
+                    tags.put("channelName",String.valueOf(channel.getName()));
+                }
+            }catch (Throwable t) {
+                logger.warn("find channel by id {} error: {}",channelId,  t);
             }
         }
     }

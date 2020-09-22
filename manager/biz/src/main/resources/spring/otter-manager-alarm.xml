@@ -39,5 +39,8 @@
 		<property name="pipelineDao">
 			<ref bean="pipelineDao" />
 		</property>
+		<property name="channelDao">
+			<ref bean="channelDao" />
+		</property>
 	</bean>
 </beans>
