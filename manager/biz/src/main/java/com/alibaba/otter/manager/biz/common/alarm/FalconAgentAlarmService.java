@@ -173,11 +173,15 @@ public class FalconAgentAlarmService {
         Map<String,String> tagmap = parameter.getTags();
         if (tagmap != null && tagmap.keySet().size()>0) {
             fillChannelId(tagmap);
+            String channelName = tagmap.get("channelName");
+            if (channelName != null) {
+                result.setEndpoint(channelName); // endpoint 使用channel名称
+            }
             StringBuilder paramBuilder = new StringBuilder();
             for (String key:tagmap.keySet()) {
                 String value = tagmap.get(key).replace(",","_");
                 tagstr.append(key).append("=").append(value).append(",");
-                paramBuilder.append(key).append(":").append(value);
+                paramBuilder.append(key).append(":").append(value).append(";");
             }
             tagstr.append("Param=").append(paramBuilder.toString());
         }
