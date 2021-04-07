@@ -38,6 +38,9 @@
 					<message>${displayName} 最少由${minLength}个字符组成，最多不能超过${maxLength}个字符</message>
 				</fm-validators:string-length-validator>
 			</field>
+			<field name="dataMedia1" displayName="数据源1"/>
+			<field name="dataMedia2" displayName="数据源2"/>
+			<field name="twoWay" displayName="是否双向同步"/>
 			<field name="status" displayName="Channel运行状态" />
 			<field name="description" displayName="Channel描述" />
 		</group>
