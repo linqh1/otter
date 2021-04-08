@@ -28,6 +28,8 @@ import com.alibaba.otter.manager.biz.common.exceptions.RepeatConfigureException;
 import com.alibaba.otter.manager.biz.config.autokeeper.dal.AutoKeeperClusterDAO;
 import com.alibaba.otter.manager.biz.config.autokeeper.dal.dataobject.AutoKeeperClusterDO;
 import com.alibaba.otter.manager.biz.config.canal.CanalService;
+import com.alibaba.otter.manager.biz.config.canal.dal.CanalDAO;
+import com.alibaba.otter.manager.biz.config.canal.dal.dataobject.CanalDO;
 import com.alibaba.otter.manager.biz.config.channel.ChannelService;
 import com.alibaba.otter.manager.biz.config.channel.dal.ChannelDAO;
 import com.alibaba.otter.manager.biz.config.channel.dal.dataobject.ChannelDO;
@@ -85,6 +87,7 @@ public class ChannelServiceImpl implements ChannelService {
     private DataMediaSourceDAO     dataMediaSourceDao;
     private AutoKeeperClusterDAO   autoKeeperClusterDao;
     private NodeDAO nodeDao;
+    private CanalDAO canalDao;
 
     /**
      * 添加Channel
@@ -509,6 +512,34 @@ public class ChannelServiceImpl implements ChannelService {
         }
         DataMediaSourceDO source1 = dataMediaSourceDao.findById(dataMedia1List.get(0).getSource().getId());
         DataMediaSourceDO source2 = dataMediaSourceDao.findById(dataMedia2List.get(0).getSource().getId());
+
+        String canal1Name = getCanalName(channel.getCanal1Name(), source1, source2);
+        String canal2Name = getCanalName(channel.getCanal2Name(), source2, source1);
+        if (canal1Name.equalsIgnoreCase(canal2Name)) {
+            throw new RuntimeException("canal name can not be same");
+        }
+        CanalDO canal1DO = new CanalDO();
+        canal1DO.setId(0L);
+        canal1DO.setName(canal1Name);
+        if (!canalDao.checkUnique(canal1DO)) {
+            throw new RuntimeException("canal1 name conflict");
+        }
+        if (channel.isTwoWay()) {
+            CanalDO canal2DO = new CanalDO();
+            canal2DO.setId(0L);
+            canal2DO.setName(canal2Name);
+            if (!canalDao.checkUnique(canal2DO)) {
+                throw new RuntimeException("canal2 name conflict");
+            }
+        }
+
+        String pipeline1Name = getPipelineName(channel.getPipeline1Name(), source1, source2);
+        String pipeline2Name = getPipelineName(channel.getPipeline2Name(), source2, source1);
+        if (pipeline1Name.equalsIgnoreCase(pipeline2Name)) {
+            throw new RuntimeException("pipeline name can not be same");
+        }
+
+
         DataSourceKey fromSourceKey = parseDataSourceKey(source1.getProperties());
         DataSourceKey toSourceKey = parseDataSourceKey(source2.getProperties());
         if (!fromSourceKey.getUrl().startsWith("jdbc:mysql://") || !toSourceKey.getUrl().startsWith("jdbc:mysql://")) {
@@ -517,9 +548,9 @@ public class ChannelServiceImpl implements ChannelService {
         // 创建channel
         create(channel);
         // 创建canal + pipeline
-        createCanalPipeline(channel.getId(),source1,dataMedia1List,source2,dataMedia2List,zkList,nodeList);
+        createCanalPipeline(channel,channel.getCanal1Name(), channel.getPipeline1Name(), source1,dataMedia1List,source2,dataMedia2List,zkList,nodeList);
         if (channel.isTwoWay()) {
-            createCanalPipeline(channel.getId(),source2,dataMedia2List,source1,dataMedia1List,zkList,nodeList);
+            createCanalPipeline(channel,channel.getCanal2Name(), channel.getPipeline2Name(), source2,dataMedia2List,source1,dataMedia1List,zkList,nodeList);
         }
     }
 
@@ -533,11 +564,12 @@ public class ChannelServiceImpl implements ChannelService {
                 jsonObject.getString("encode"));
     }
 
-    private void createCanalPipeline(Long channelId, DataMediaSourceDO fromSource, List<DataMedia> fromDataMediaList,
-                                     DataMediaSourceDO toSource,List<DataMedia> toDataMediaList,
+    private void createCanalPipeline(QuickChannel channel, String canalName, String pipelineName,
+                                     DataMediaSourceDO fromSource, List<DataMedia> fromDataMediaList,
+                                     DataMediaSourceDO toSource, List<DataMedia> toDataMediaList,
                                      List<AutoKeeperClusterDO> zkList, List<NodeDO> nodeList) {
         Canal canal = new Canal();
-        canal.setName("canal_" + fromSource.getName() + "-" + toSource.getName());
+        canal.setName(getCanalName(canalName,fromSource,toSource));
         CanalParameter canalParameter = generateDefaultCanalParameter();
         DataSourceKey fromSourceKey = parseDataSourceKey(fromSource.getProperties());
         canalParameter.setDbUsername(fromSourceKey.getUserName());
@@ -554,8 +586,8 @@ public class ChannelServiceImpl implements ChannelService {
         canalService.modify(canal);
 
         Pipeline pipeline = new Pipeline();
-        pipeline.setChannelId(channelId);
-        pipeline.setName("pipeline_" + fromSource.getName() + "-" + toSource.getName());
+        pipeline.setChannelId(channel.getId());
+        pipeline.setName(getPipelineName(pipelineName,fromSource,toSource));
         Node node = new Node();
         node.setId(nodeList.get(0).getId());// 创建后需要手动修改pipeline的select/load node
         node.setParameters(new NodeParameter());
@@ -587,6 +619,16 @@ public class ChannelServiceImpl implements ChannelService {
             dataMediaPair.setResolverData(resolverData);
             dataMediaPairService.create(dataMediaPair);
         }
+    }
+
+    private String getCanalName(String canalName, DataMediaSourceDO fromSource,DataMediaSourceDO toSource) {
+        String defaultCanalName = "canal_" + fromSource.getName() + "-" + toSource.getName();
+        return StringUtils.isBlank(canalName)?defaultCanalName:StringUtils.trim(canalName);
+    }
+
+    private String getPipelineName(String pipelineName, DataMediaSourceDO fromSource,DataMediaSourceDO toSource) {
+        String defaultPipelineName = "pipeline_" + fromSource.getName() + "-" + toSource.getName();
+        return StringUtils.isBlank(pipelineName)?defaultPipelineName:StringUtils.trim(pipelineName);
     }
 
     private PipelineParameter generateDefaultPipelineParameter() {
@@ -962,5 +1004,13 @@ public class ChannelServiceImpl implements ChannelService {
 
     public void setDataMediaService(DataMediaService dataMediaService) {
         this.dataMediaService = dataMediaService;
+    }
+
+    public CanalDAO getCanalDao() {
+        return canalDao;
+    }
+
+    public void setCanalDao(CanalDAO canalDao) {
+        this.canalDao = canalDao;
     }
 }

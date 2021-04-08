@@ -40,6 +40,10 @@
 			</field>
 			<field name="dataMedia1" displayName="数据源1"/>
 			<field name="dataMedia2" displayName="数据源2"/>
+			<field name="canal1Name" displayName="canal1名称"/>
+			<field name="canal2Name" displayName="canal2名称"/>
+			<field name="pipeline1Name" displayName="pipeline1名称"/>
+			<field name="pipeline2Name" displayName="pipeline2名称"/>
 			<field name="twoWay" displayName="是否双向同步"/>
 			<field name="status" displayName="Channel运行状态" />
 			<field name="description" displayName="Channel描述" />

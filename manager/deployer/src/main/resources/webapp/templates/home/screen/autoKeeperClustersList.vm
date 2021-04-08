@@ -58,7 +58,7 @@ $control.setTemplate("home:navigation.vm")
     			#set ($refreshURL = $homeModule.setAction("AutoKeeperClusterAction").addQueryData("clusterId", $autoKeeperCluster.id).addQueryData("eventSubmitDoRefresh", "true"))
         		<span class="ico_line">|</span><a href="$refreshURL"><img src="images/ico_edit.png" width="13" height="13" /><span class="ico_font">刷新</span></a>
     			#set ($removeURL = $homeModule.setAction("AutoKeeperClusterAction").addQueryData("clusterId", $autoKeeperCluster.id).addQueryData("eventSubmitDoDelete", "true"))
-    			<span class="ico_line">|</span><a href="$removeURL"><img src="images/ico_del.png" width="9" height="9"  />删除</a>
+    			<span class="ico_line">|</span><a href="javascript:if(confirm('确实要删除吗?'))location='$removeURL'" ><img src="images/ico_del.png" width="9" height="9"  />删除</a>
 			#end
 		  </td>
         </tr>

@@ -35,24 +35,6 @@ $control.setTemplate("home:navigation.vm")
 			<span class="red">#addChannelMessage ($channelGroup.name)#addChannelMessage ($channelGroup.formChannelError)</span>
 		</td>
       </tr>
-      <tr>
-        <th width="300">数据方向(src->dest)</th>
-        <td width="329">
-            <input type="text" placeholder="数据源1名称、ID" name="$channelGroup.dataMedia1.key" value="$!channelGroup.dataMedia1.value"/>
-            <span> ~ </span>
-            <input type="text" placeholder="数据源2名称、ID" name="$channelGroup.dataMedia2.key" value="$!channelGroup.dataMedia2.value"/>
-            <br />
-            <span class="red">#addChannelMessage ($channelGroup.dataMedia1)#addChannelMessage ($channelGroup.formChannelError)</span>
-            <span class="red">#addChannelMessage ($channelGroup.dataMedia2)#addChannelMessage ($channelGroup.formChannelError)</span>
-        </td>
-      </tr>
-      <tr>
-        <th width="300">是否双向同步</th>
-        <td width="329">
-            <input type="radio" name="$channelGroup.twoWay.key" checked='checked' value="true"/>是
-            <input type="radio" name="$channelGroup.twoWay.key" value="false"/>否
-        </td>
-      </tr>
 	  <tr> 
         <th>同步一致性：</th>
         <td>
@@ -97,6 +79,59 @@ $control.setTemplate("home:navigation.vm")
        <th>描述：</th>
        <td><textarea cols="45" rows="5" name="$channelGroup.description.key">$!group.description.value</textarea><span class="red">#addChannelMessage ($channelGroup.description)</span><span class="red">*</span></td>
       </tr>
+      <tr>
+        <th>快速创建参数：</th>
+      </tr>
+      <tr>
+        <th width="300">数据方向(src->dest)</th>
+        <td width="329">
+            <input type="text" placeholder="数据源1 ID/名称" name="$channelGroup.dataMedia1.key" value="$!channelGroup.dataMedia1.value"/>
+            <span> ~ </span>
+            <input type="text" placeholder="数据源2 ID/名称" name="$channelGroup.dataMedia2.key" value="$!channelGroup.dataMedia2.value"/>
+            <span class="red">*</span>
+        </td>
+        <td>必填。优先按照id查找，查不到则按照name查找</td>
+      </tr>
+      <tr>
+        <th width="300">canal名称</th>
+        <td width="329">
+            <input type="text" placeholder="canal1名称" name="$channelGroup.canal1Name.key" value="$!channelGroup.canal1Name.value"/>
+            <span> ~ </span>
+            <input type="text" placeholder="canal2名称" name="$channelGroup.canal2Name.key" value="$!channelGroup.canal2Name.value"/>
+        </td>
+        <td>选填。默认：canal_${source1Name}-${source2Name}。otter限制canal名称必须要唯一，不能重复</td>
+      </tr>
+      <tr>
+        <th width="300">pipeline名称</th>
+        <td width="329">
+            <input type="text" placeholder="pipeline1名称" name="$channelGroup.pipeline1Name.key" value="$!channelGroup.pipeline1Name.value"/>
+            <span> ~ </span>
+            <input type="text" placeholder="pipeline2名称" name="$channelGroup.pipeline2Name.key" value="$!channelGroup.pipeline2Name.value"/>
+        </td>
+        <td>选填。默认：pipeline_${source1Name}-${source2Name}。建议修改为两个节点的组合：la-sjc</td>
+      </tr>
+      <tr>
+        <th width="300">是否双向同步</th>
+        <td width="329">
+            <input type="radio" name="$channelGroup.twoWay.key" checked='checked' value="true"/>是
+            <input type="radio" name="$channelGroup.twoWay.key" value="false"/>否
+        </td>
+      </tr>
+        <tr>
+            <th>创建完成后,需要：</th>
+        </tr>
+        <tr>
+            <th></th>
+            <td>1. 手动修改pipeline的select/load机器</td>
+        </tr>
+        <tr>
+            <th></th>
+            <td>2. 手动修改canal的zookeeper</td>
+        </tr>
+        <tr>
+            <th></th>
+            <td>3. 如果创建失败的话，需要检查是否有脏数据生成（channel，pipeline，canal）</td>
+        </tr>
     </table>
  </div>
    <div class="btn"><a href="javascript:document.addQuickChannelForm.submit();" title="创建成功后必须手动修改: 1.pipeline的select/load node 2.canal的zookeeper">保存</a></div>
