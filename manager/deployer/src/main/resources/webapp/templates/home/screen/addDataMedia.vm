@@ -89,10 +89,10 @@ function changeKeyword(id, name) {
 			<th>批量创建说明</th>
 			<td>
 				<br/>
-				1. 不管是创建单表还是批量创建多表, table name都不可为空<br/>
-				2. 当textarea为空时, 则表示创建单表, 否则取textarea的数据批量创建表<br/>
-				3. textarea的数据格式应该是:库名.表名.如:otter.ALARM_RULE. 多张表以换行符分隔<br/>
-				4. 批量创建的表如果已经存在, 则不会重新创建<br/>
+				1. 不管是创建单表还是批量创建多表，table name都不可为空<br/>
+				2. 当textarea为空时，则取table name数据创建单表，否则取textarea数据创建多表<br/>
+				3. textarea的数据格式应该是：库名.表名。如：otter.ALARM_RULE。多张表以换行符分隔<br/>
+				4. 批量创建会自动过滤已经创建过的表。可以放心添加全库的表，不必关心是否已经创建<br/>
 			</td>
 		</tr>
     </table>
