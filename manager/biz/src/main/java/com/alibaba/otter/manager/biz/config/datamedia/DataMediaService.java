@@ -20,6 +20,7 @@ import java.util.List;
 
 import com.alibaba.otter.manager.biz.common.baseservice.GenericService;
 import com.alibaba.otter.shared.common.model.config.data.DataMedia;
+import com.alibaba.otter.shared.common.model.config.data.DataMediaSource;
 
 /**
  * @author simon
@@ -37,4 +38,6 @@ public interface DataMediaService extends GenericService<DataMedia> {
     public List<String> queryColumnByMediaId(Long dataMediaId);
 
     List<DataMedia> listByDataMediaSourceName(String dataMedia1);
+
+    void batchCreate(DataMediaSource source, List<DataMedia> dataMediaList);
 }

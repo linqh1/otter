@@ -79,6 +79,12 @@ function changeKeyword(id, name) {
 			正则配置: (.*).(.*)<br/>
 		</td>
       </tr>
+		<tr>
+			<th width="300">批量创建数据表：</th>
+			<td width="329">
+				<textarea name="$dataMediaGroup.tables.key" value="$!dataMediaGroup.tables.value"></textarea>
+			</td>
+		</tr>
     </table>
 	 
  </div>

@@ -306,6 +306,7 @@
 					<message>必须选择一个 ${displayName}</message>
 				</fm-validators:required-validator>
 			</field>
+			<field name="tables" displayName="数据表列表" />
 		</group>
 
 		<!-- - ======== - zookeeperCluster info - ======== -->
