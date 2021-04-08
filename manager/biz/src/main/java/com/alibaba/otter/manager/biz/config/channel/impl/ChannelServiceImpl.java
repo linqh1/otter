@@ -664,7 +664,7 @@ public class ChannelServiceImpl implements ChannelService {
     private List<String> getAllDataMediaName(List<DataMedia> dataMediaList) {
         List<String> result = new ArrayList<String>();
         for (DataMedia dm: dataMediaList) {
-            result.add(dm.getName());
+            result.add(dm.getNamespace() + "." + dm.getName());// 库名.表名
         }
         return result;
     }
