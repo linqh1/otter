@@ -95,7 +95,7 @@ public class ChannelAction extends AbstractAction {
         channel.setStatus(ChannelStatus.STOP);
         channel.setParameters(parameter);
         try {
-            channelService.create(channel);
+            channelService.quickAddChannel(channel);
         } catch (RepeatConfigureException rce) {
             err.setMessage("invalidChannelName");
             return;

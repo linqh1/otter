@@ -16,17 +16,6 @@
 
 package com.alibaba.otter.manager.biz.config.channel.impl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallbackWithoutResult;
-import org.springframework.transaction.support.TransactionTemplate;
-
 import com.alibaba.otter.manager.biz.common.exceptions.InvalidConfigureException;
 import com.alibaba.otter.manager.biz.common.exceptions.InvalidConfigureException.INVALID_TYPE;
 import com.alibaba.otter.manager.biz.common.exceptions.ManagerException;
@@ -34,17 +23,30 @@ import com.alibaba.otter.manager.biz.common.exceptions.RepeatConfigureException;
 import com.alibaba.otter.manager.biz.config.channel.ChannelService;
 import com.alibaba.otter.manager.biz.config.channel.dal.ChannelDAO;
 import com.alibaba.otter.manager.biz.config.channel.dal.dataobject.ChannelDO;
+import com.alibaba.otter.manager.biz.config.datamedia.DataMediaService;
 import com.alibaba.otter.manager.biz.config.parameter.SystemParameterService;
 import com.alibaba.otter.manager.biz.config.pipeline.PipelineService;
 import com.alibaba.otter.manager.biz.remote.ConfigRemoteService;
 import com.alibaba.otter.shared.arbitrate.ArbitrateManageService;
 import com.alibaba.otter.shared.common.model.config.channel.Channel;
 import com.alibaba.otter.shared.common.model.config.channel.ChannelStatus;
+import com.alibaba.otter.shared.common.model.config.channel.QuickChannel;
+import com.alibaba.otter.shared.common.model.config.data.DataMedia;
 import com.alibaba.otter.shared.common.model.config.parameter.SystemParameter;
 import com.alibaba.otter.shared.common.model.config.pipeline.Pipeline;
 import com.alibaba.otter.shared.common.model.config.pipeline.PipelineParameter;
 import com.alibaba.otter.shared.common.utils.Assert;
 import com.alibaba.otter.shared.common.utils.JsonUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.math.NumberUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallbackWithoutResult;
+import org.springframework.transaction.support.TransactionTemplate;
+
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 主要提供增加、删除、修改、列表功能； 提供开启和停止channel方法，需要调用仲裁器方法
@@ -61,6 +63,7 @@ public class ChannelServiceImpl implements ChannelService {
     private ConfigRemoteService    configRemoteService;
     private PipelineService        pipelineService;
     private ChannelDAO             channelDao;
+    private DataMediaService       dataMediaService;
 
     /**
      * 添加Channel
@@ -462,6 +465,65 @@ public class ChannelServiceImpl implements ChannelService {
         switchChannelStatus(channelId, ChannelStatus.START);
     }
 
+    @Override
+    public void quickAddChannel(QuickChannel channel) {
+        List<DataMedia> dataMedia1List = checkDataMedia(channel.getDataMedia1());
+        List<DataMedia> dataMedia2List = checkDataMedia(channel.getDataMedia2());
+        if (dataMedia1List.get(0).getSource().getId().equals(dataMedia2List.get(0).getSource().getId())) {
+            throw new RuntimeException("two data media reference a same data meida");
+        }
+        List<String> dataMedia1Names = getAllDataMediaName(dataMedia1List);
+        List<String> dataMedia2Names = getAllDataMediaName(dataMedia2List);
+        if (!listEqual(dataMedia1Names,dataMedia2Names)) {
+            throw new RuntimeException("data media 1:" + channel.getDataMedia1() + " do not match data media 2:" + channel.getDataMedia2());
+        }
+    }
+
+    private List<String> getAllDataMediaName(List<DataMedia> dataMediaList) {
+        List<String> result = new ArrayList<String>();
+        for (DataMedia dm: dataMediaList) {
+            result.add(dm.getName());
+        }
+        Collections.sort(result);
+        return result;
+    }
+
+    private boolean listEqual(List<String> dataMedia1Ids, List<String> dataMedia2Ids) {
+        if (dataMedia1Ids.size() != dataMedia2Ids.size()) {
+            return false;
+        }
+        int size = dataMedia1Ids.size();
+        for (int i=0;i<size;i++) {
+            if (!dataMedia1Ids.get(i).equals(dataMedia2Ids.get(i))){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private List<DataMedia> checkDataMedia(String dataMedia) {
+        if (StringUtils.isBlank(dataMedia)) {
+            throw new RuntimeException("dataMedia is required");
+        }
+        List<DataMedia> dataMediaList = null;
+        if (NumberUtils.isDigits(dataMedia)) {
+            dataMediaList = dataMediaService.listByDataMediaSourceId(Long.parseLong(dataMedia));
+        }else {
+            dataMediaList = dataMediaService.listByDataMediaSourceName(dataMedia);
+        }
+        if (dataMediaList == null || dataMediaList.isEmpty()) {
+            throw new RuntimeException("can not found data media: " + dataMedia);
+        }
+        List<Long> ids = new ArrayList<Long>();
+        for (DataMedia media : dataMediaList) {
+            ids.add(media.getSource().getId());
+        }
+        if (ids.size() != 1) {
+            throw new RuntimeException(dataMedia + " match multi data media");
+        }
+        return dataMediaList;
+    }
+
     public void notifyChannel(Long channelId) {
         switchChannelStatus(channelId, null);
     }
@@ -709,4 +771,11 @@ public class ChannelServiceImpl implements ChannelService {
         this.systemParameterService = systemParameterService;
     }
 
+    public DataMediaService getDataMediaService() {
+        return dataMediaService;
+    }
+
+    public void setDataMediaService(DataMediaService dataMediaService) {
+        this.dataMediaService = dataMediaService;
+    }
 }

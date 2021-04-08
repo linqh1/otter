@@ -21,6 +21,9 @@
 		<property name="transactionTemplate">
 			<ref bean="transactionTemplate" />
 		</property>
+		<property name="dataMediaService">
+			<ref bean="dataMediaService" />
+		</property>
 	</bean>
 
 	<bean id="pipelineService" class="com.alibaba.otter.manager.biz.config.pipeline.impl.PipelineServiceImpl">

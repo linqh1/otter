@@ -36,4 +36,5 @@ public interface DataMediaService extends GenericService<DataMedia> {
 
     public List<String> queryColumnByMediaId(Long dataMediaId);
 
+    List<DataMedia> listByDataMediaSourceName(String dataMedia1);
 }

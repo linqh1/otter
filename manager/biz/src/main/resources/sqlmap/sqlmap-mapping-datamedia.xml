@@ -81,6 +81,13 @@
 		from DATA_MEDIA where DATA_MEDIA_SOURCE_ID = #value# ORDER BY ID DESC
 	</select>
 
+	<select id="listDataMediasByDataMediaSourceName" resultMap="dataMediaResult" parameterClass="string">
+		select d.ID,d.NAME,d.NAMESPACE,d.PROPERTIES,d.DATA_MEDIA_SOURCE_ID,d.GMT_CREATE,d.GMT_MODIFIED
+		  from DATA_MEDIA d
+		 inner join data_media_source dms on dms.ID = d.DATA_MEDIA_SOURCE_ID
+		  where dms.NAME = #name# ORDER BY ID DESC
+	</select>
+
 	<update id="updateDataMedia" parameterClass="dataMedia"><![CDATA[
 		update DATA_MEDIA
 		set

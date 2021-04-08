@@ -29,4 +29,6 @@ public interface DataMediaDAO extends GenericDAO<DataMediaDO> {
     public List<DataMediaDO> listByDataMediaSourceId(Long dataMediaSourceId);
 
     public DataMediaDO checkUniqueAndReturnExist(DataMediaDO dataMedia);
+
+    List<DataMediaDO> listByDataMediaSourceName(String name);
 }

@@ -63,6 +63,23 @@ public class DataMediaServiceImpl implements DataMediaService {
     }
 
     @Override
+    public List<DataMedia> listByDataMediaSourceName(String name) {
+        Assert.assertNotNull(name);
+        List<DataMediaDO> dataMediaDos = null;
+        try {
+            dataMediaDos = dataMediaDao.listByDataMediaSourceName(name);
+            if (dataMediaDos.isEmpty()) {
+                logger.debug("DEBUG ## couldn't query any dataMedia, maybe hasn't create any dataMedia.");
+                return new ArrayList<DataMedia>();
+            }
+        } catch (Exception e) {
+            logger.error("ERROR ## query dataMedias by name:" + name + " has an exception!");
+            throw new ManagerException(e);
+        }
+        return doToModel(dataMediaDos);
+    }
+
+    @Override
     public List<String> queryColumnByMedia(DataMedia dataMedia) {
         List<String> columnResult = new ArrayList<String>();
         if (dataMedia.getSource().getType().isNapoli()) {
