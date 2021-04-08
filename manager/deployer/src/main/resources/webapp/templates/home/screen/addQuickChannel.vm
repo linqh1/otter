@@ -99,7 +99,7 @@ $control.setTemplate("home:navigation.vm")
       </tr>
     </table>
  </div>
-   <div class="btn"><a href="javascript:document.addQuickChannelForm.submit();">保存</a></div>
+   <div class="btn"><a href="javascript:document.addQuickChannelForm.submit();" title="创建成功后必须手动修改: 1.pipeline的select/load node 2.canal的zookeeper">保存</a></div>
   
   </form>
 </div>

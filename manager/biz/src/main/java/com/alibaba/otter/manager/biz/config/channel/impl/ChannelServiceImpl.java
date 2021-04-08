@@ -16,14 +16,27 @@
 
 package com.alibaba.otter.manager.biz.config.channel.impl;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
+import com.alibaba.otter.canal.instance.manager.model.Canal;
+import com.alibaba.otter.canal.instance.manager.model.CanalParameter;
+import com.alibaba.otter.common.push.datasource.DataSourceKey;
 import com.alibaba.otter.manager.biz.common.exceptions.InvalidConfigureException;
 import com.alibaba.otter.manager.biz.common.exceptions.InvalidConfigureException.INVALID_TYPE;
 import com.alibaba.otter.manager.biz.common.exceptions.ManagerException;
 import com.alibaba.otter.manager.biz.common.exceptions.RepeatConfigureException;
+import com.alibaba.otter.manager.biz.config.autokeeper.dal.AutoKeeperClusterDAO;
+import com.alibaba.otter.manager.biz.config.autokeeper.dal.dataobject.AutoKeeperClusterDO;
+import com.alibaba.otter.manager.biz.config.canal.CanalService;
 import com.alibaba.otter.manager.biz.config.channel.ChannelService;
 import com.alibaba.otter.manager.biz.config.channel.dal.ChannelDAO;
 import com.alibaba.otter.manager.biz.config.channel.dal.dataobject.ChannelDO;
 import com.alibaba.otter.manager.biz.config.datamedia.DataMediaService;
+import com.alibaba.otter.manager.biz.config.datamediapair.DataMediaPairService;
+import com.alibaba.otter.manager.biz.config.datamediasource.dal.DataMediaSourceDAO;
+import com.alibaba.otter.manager.biz.config.datamediasource.dal.dataobject.DataMediaSourceDO;
+import com.alibaba.otter.manager.biz.config.node.dal.NodeDAO;
+import com.alibaba.otter.manager.biz.config.node.dal.dataobject.NodeDO;
 import com.alibaba.otter.manager.biz.config.parameter.SystemParameterService;
 import com.alibaba.otter.manager.biz.config.pipeline.PipelineService;
 import com.alibaba.otter.manager.biz.remote.ConfigRemoteService;
@@ -31,7 +44,9 @@ import com.alibaba.otter.shared.arbitrate.ArbitrateManageService;
 import com.alibaba.otter.shared.common.model.config.channel.Channel;
 import com.alibaba.otter.shared.common.model.config.channel.ChannelStatus;
 import com.alibaba.otter.shared.common.model.config.channel.QuickChannel;
-import com.alibaba.otter.shared.common.model.config.data.DataMedia;
+import com.alibaba.otter.shared.common.model.config.data.*;
+import com.alibaba.otter.shared.common.model.config.node.Node;
+import com.alibaba.otter.shared.common.model.config.node.NodeParameter;
 import com.alibaba.otter.shared.common.model.config.parameter.SystemParameter;
 import com.alibaba.otter.shared.common.model.config.pipeline.Pipeline;
 import com.alibaba.otter.shared.common.model.config.pipeline.PipelineParameter;
@@ -45,8 +60,8 @@ import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallbackWithoutResult;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import java.net.InetSocketAddress;
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * 主要提供增加、删除、修改、列表功能； 提供开启和停止channel方法，需要调用仲裁器方法
@@ -63,7 +78,13 @@ public class ChannelServiceImpl implements ChannelService {
     private ConfigRemoteService    configRemoteService;
     private PipelineService        pipelineService;
     private ChannelDAO             channelDao;
+
     private DataMediaService       dataMediaService;
+    private DataMediaPairService   dataMediaPairService;
+    private CanalService           canalService;
+    private DataMediaSourceDAO     dataMediaSourceDao;
+    private AutoKeeperClusterDAO   autoKeeperClusterDao;
+    private NodeDAO nodeDao;
 
     /**
      * 添加Channel
@@ -87,6 +108,7 @@ public class ChannelServiceImpl implements ChannelService {
                     }
                     channelDao.insert(channelDo);
                     arbitrateManageService.channelEvent().init(channelDo.getId());
+                    channel.setId(channelDo.getId());// 回设新增数据的id
 
                 } catch (RepeatConfigureException rce) {
                     throw rce;
@@ -467,16 +489,134 @@ public class ChannelServiceImpl implements ChannelService {
 
     @Override
     public void quickAddChannel(QuickChannel channel) {
+        List<AutoKeeperClusterDO> zkList = autoKeeperClusterDao.listAutoKeeperClusters();
+        if (zkList.isEmpty()) {
+            throw new RuntimeException("no available zookeeper");
+        }
+        List<NodeDO> nodeList = nodeDao.listAll();
+        if (nodeList.isEmpty()) {
+            throw new RuntimeException("no available node");
+        }
         List<DataMedia> dataMedia1List = checkDataMedia(channel.getDataMedia1());
         List<DataMedia> dataMedia2List = checkDataMedia(channel.getDataMedia2());
         if (dataMedia1List.get(0).getSource().getId().equals(dataMedia2List.get(0).getSource().getId())) {
-            throw new RuntimeException("two data media reference a same data meida");
+            throw new RuntimeException("two data media reference a same data media");
         }
         List<String> dataMedia1Names = getAllDataMediaName(dataMedia1List);
         List<String> dataMedia2Names = getAllDataMediaName(dataMedia2List);
         if (!listEqual(dataMedia1Names,dataMedia2Names)) {
             throw new RuntimeException("data media 1:" + channel.getDataMedia1() + " do not match data media 2:" + channel.getDataMedia2());
         }
+        DataMediaSourceDO source1 = dataMediaSourceDao.findById(dataMedia1List.get(0).getSource().getId());
+        DataMediaSourceDO source2 = dataMediaSourceDao.findById(dataMedia2List.get(0).getSource().getId());
+        DataSourceKey fromSourceKey = parseDataSourceKey(source1.getProperties());
+        DataSourceKey toSourceKey = parseDataSourceKey(source2.getProperties());
+        if (!fromSourceKey.getUrl().startsWith("jdbc:mysql://") || !toSourceKey.getUrl().startsWith("jdbc:mysql://")) {
+            throw new RuntimeException("data source is required to MYSQL");
+        }
+        // 创建channel
+        create(channel);
+        // 创建canal + pipeline
+        createCanalPipeline(channel.getId(),source1,dataMedia1List,source2,dataMedia2List,zkList,nodeList);
+        if (channel.isTwoWay()) {
+            createCanalPipeline(channel.getId(),source2,dataMedia2List,source1,dataMedia1List,zkList,nodeList);
+        }
+    }
+
+    private DataSourceKey parseDataSourceKey(String properties) {
+        JSONObject jsonObject = JSON.parseObject(properties);
+        return new DataSourceKey(jsonObject.getString("url"),
+                jsonObject.getString("username"),
+                jsonObject.getString("password"),
+                jsonObject.getString("driver"),
+                DataMediaType.MYSQL,
+                jsonObject.getString("encode"));
+    }
+
+    private void createCanalPipeline(Long channelId, DataMediaSourceDO fromSource, List<DataMedia> fromDataMediaList,
+                                     DataMediaSourceDO toSource,List<DataMedia> toDataMediaList,
+                                     List<AutoKeeperClusterDO> zkList, List<NodeDO> nodeList) {
+        Canal canal = new Canal();
+        canal.setName("canal_" + fromSource.getName() + "-" + toSource.getName());
+        CanalParameter canalParameter = generateDefaultCanalParameter();
+        DataSourceKey fromSourceKey = parseDataSourceKey(fromSource.getProperties());
+        canalParameter.setDbUsername(fromSourceKey.getUserName());
+        canalParameter.setDbPassword(fromSourceKey.getPassword());
+        String[] addrInfo = fromSourceKey.getUrl().substring("jdbc:mysql://".length()).split(":");
+        InetSocketAddress address = new InetSocketAddress(addrInfo[0], Integer.valueOf(addrInfo[1]));
+        CanalParameter.DataSourcing dataSourcing = new CanalParameter.DataSourcing(CanalParameter.SourcingType.MYSQL,address);
+        canalParameter.setGroupDbAddresses(Arrays.asList(Arrays.asList(dataSourcing)));
+        canalParameter.setZkClusterId(zkList.get(0).getId());// 创建后需要手动修改canal的zk
+
+        canal.setCanalParameter(canalParameter);
+        canalService.create(canal);
+        canalParameter.setSlaveId(10000 + canal.getId());
+        canalService.modify(canal);
+
+        Pipeline pipeline = new Pipeline();
+        pipeline.setChannelId(channelId);
+        pipeline.setName("pipeline_" + fromSource.getName() + "-" + toSource.getName());
+        Node node = new Node();
+        node.setId(nodeList.get(0).getId());// 创建后需要手动修改pipeline的select/load node
+        node.setParameters(new NodeParameter());
+        pipeline.setSelectNodes(Arrays.asList(node));
+        pipeline.setExtractNodes(Arrays.asList(node));
+        pipeline.setLoadNodes(Arrays.asList(node));
+        PipelineParameter parameter = generateDefaultPipelineParameter();
+        parameter.setDestinationName(canal.getName());
+        pipeline.setParameters(parameter);
+        pipelineService.create(pipeline);
+
+        int size = fromDataMediaList.size();
+        for (int i=0;i<size;i++) {
+            DataMedia fromDataMedia = fromDataMediaList.get(i);
+            DataMedia toDataMedia = toDataMediaList.get(i);
+            DataMediaPair dataMediaPair = new DataMediaPair();
+            dataMediaPair.setPipelineId(pipeline.getId());
+            dataMediaPair.setPushWeight(5L);
+            dataMediaPair.setSource(fromDataMedia);
+            dataMediaPair.setTarget(toDataMedia);
+
+            ExtensionData filterData = new ExtensionData();
+            filterData.setExtensionDataType(ExtensionDataType.CLAZZ);
+            filterData.setClazzPath("");
+            dataMediaPair.setFilterData(filterData);
+            ExtensionData resolverData = new ExtensionData();
+            resolverData.setExtensionDataType(ExtensionDataType.CLAZZ);
+            resolverData.setClazzPath("");
+            dataMediaPair.setResolverData(resolverData);
+            dataMediaPairService.create(dataMediaPair);
+        }
+    }
+
+    private PipelineParameter generateDefaultPipelineParameter() {
+        PipelineParameter parameter = new PipelineParameter();
+        parameter.setArbitrateMode(PipelineParameter.ArbitrateMode.AUTOMATIC);
+        parameter.setDumpEvent(false);
+        parameter.setDumpSelectorDetail(false);
+        parameter.setExtractPoolSize(10);
+        parameter.setFileLoadPoolSize(15);
+        parameter.setLbAlgorithm(PipelineParameter.LoadBanlanceAlgorithm.Stick);
+        parameter.setLoadPoolSize(15);
+        parameter.setMainstemBatchsize(6000);
+        parameter.setParallelism(5L);
+        return parameter;
+    }
+
+    private CanalParameter generateDefaultCanalParameter() {
+        CanalParameter canalParameter = new CanalParameter();
+        canalParameter.setClusterMode(null);
+        canalParameter.setDetectingEnable(true);
+        canalParameter.setDetectingIntervalInSeconds(5);
+        canalParameter.setDetectingSQL("insert into retl.xdual values(1,now()) on duplicate key update x=now()");
+        canalParameter.setIndexMode(CanalParameter.IndexMode.MEMORY_META_FAILBACK);
+        canalParameter.setMemoryStorageBufferSize(32768);
+        canalParameter.setMetaMode(CanalParameter.MetaMode.MIXED);
+        canalParameter.setPositions(new ArrayList<String>());
+        canalParameter.setReceiveBufferSize(16384);
+        canalParameter.setSendBufferSize(16384);
+        canalParameter.setZkClusters(new ArrayList<String>());
+        return canalParameter;
     }
 
     private List<String> getAllDataMediaName(List<DataMedia> dataMediaList) {
@@ -484,7 +624,6 @@ public class ChannelServiceImpl implements ChannelService {
         for (DataMedia dm: dataMediaList) {
             result.add(dm.getName());
         }
-        Collections.sort(result);
         return result;
     }
 
@@ -514,13 +653,19 @@ public class ChannelServiceImpl implements ChannelService {
         if (dataMediaList == null || dataMediaList.isEmpty()) {
             throw new RuntimeException("can not found data media: " + dataMedia);
         }
-        List<Long> ids = new ArrayList<Long>();
+        Set<Long> ids = new HashSet<Long>();
         for (DataMedia media : dataMediaList) {
             ids.add(media.getSource().getId());
         }
         if (ids.size() != 1) {
             throw new RuntimeException(dataMedia + " match multi data media");
         }
+        Collections.sort(dataMediaList, new Comparator<DataMedia>() {
+            @Override
+            public int compare(DataMedia o1, DataMedia o2) {
+                return o1.getName().compareTo(o2.getName());
+            }
+        });
         return dataMediaList;
     }
 
@@ -773,6 +918,46 @@ public class ChannelServiceImpl implements ChannelService {
 
     public DataMediaService getDataMediaService() {
         return dataMediaService;
+    }
+
+    public DataMediaPairService getDataMediaPairService() {
+        return dataMediaPairService;
+    }
+
+    public void setDataMediaPairService(DataMediaPairService dataMediaPairService) {
+        this.dataMediaPairService = dataMediaPairService;
+    }
+
+    public CanalService getCanalService() {
+        return canalService;
+    }
+
+    public void setCanalService(CanalService canalService) {
+        this.canalService = canalService;
+    }
+
+    public DataMediaSourceDAO getDataMediaSourceDao() {
+        return dataMediaSourceDao;
+    }
+
+    public void setDataMediaSourceDao(DataMediaSourceDAO dataMediaSourceDao) {
+        this.dataMediaSourceDao = dataMediaSourceDao;
+    }
+
+    public AutoKeeperClusterDAO getAutoKeeperClusterDao() {
+        return autoKeeperClusterDao;
+    }
+
+    public void setAutoKeeperClusterDao(AutoKeeperClusterDAO autoKeeperClusterDao) {
+        this.autoKeeperClusterDao = autoKeeperClusterDao;
+    }
+
+    public NodeDAO getNodeDao() {
+        return nodeDao;
+    }
+
+    public void setNodeDao(NodeDAO nodeDao) {
+        this.nodeDao = nodeDao;
     }
 
     public void setDataMediaService(DataMediaService dataMediaService) {

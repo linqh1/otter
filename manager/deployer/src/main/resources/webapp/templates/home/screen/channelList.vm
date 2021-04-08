@@ -300,7 +300,7 @@ $control.setTemplate("home:navigation.vm")
   <!--常规按钮-->
 	  #if($user.authorizeType.isAdmin())
 		<div class="btn"><a href="$channelAddLink">添加</a></div>
-		<div class="btn"><a href="$channelAddQuickLink" title="快速创建一个同步">快速创建</a></div>
+		<div class="btn"><a href="$channelAddQuickLink" title="快速创建一个同步,创建成功后必须手动修改: 1.pipeline的select/load node 2.canal的zookeeper">快速创建</a></div>
 	  #end
       
      <!--分页-->
