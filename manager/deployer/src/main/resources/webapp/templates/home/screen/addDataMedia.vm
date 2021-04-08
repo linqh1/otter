@@ -80,9 +80,19 @@ function changeKeyword(id, name) {
 		</td>
       </tr>
 		<tr>
-			<th width="300">批量创建数据表：</th>
+			<th width="300">批量创建：</th>
 			<td width="329">
 				<textarea name="$dataMediaGroup.tables.key" value="$!dataMediaGroup.tables.value"></textarea>
+			</td>
+		</tr>
+		<tr>
+			<th>批量创建说明</th>
+			<td>
+				<br/>
+				1. 不管是创建单表还是批量创建多表, table name都不可为空<br/>
+				2. 当textarea为空时, 则表示创建单表, 否则取textarea的数据批量创建表<br/>
+				3. textarea的数据格式应该是:库名.表名.如:otter.ALARM_RULE. 多张表以换行符分隔<br/>
+				4. 批量创建的表如果已经存在, 则不会重新创建<br/>
 			</td>
 		</tr>
     </table>
