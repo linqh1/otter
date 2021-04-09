@@ -250,6 +250,19 @@ public class DataMediaPairAction {
     }
 
     /**
+     * 删除映射关系
+     */
+    public void doBatchDelete(@Param("pipelineId") Long pipelineId,Navigator nav) throws WebxException {
+        Channel channel = channelService.findByPipelineId(pipelineId);
+        if (channel.getStatus().isStart()) {
+            nav.redirectTo(WebConstant.ERROR_FORBIDDEN_Link);
+            return;
+        }
+        dataMediaPairService.removeByPipelineId(pipelineId);
+        nav.redirectToLocation("dataMediaPairList.htm?pipelineId=" + pipelineId);
+    }
+
+    /**
      * 选择视图同步
      * 
      * @param channelInfo

@@ -124,6 +124,18 @@ public class DataMediaPairServiceImpl implements DataMediaPairService {
         }
     }
 
+    @Override
+    public void removeByPipelineId(Long pipelineId) {
+        Assert.assertNotNull(pipelineId);
+
+        try {
+            dataMediaPairDao.deleteByPipelineId(pipelineId);
+        } catch (Exception e) {
+            logger.error("ERROR ## remove dataMediaPair has an exception!", e);
+            throw new ManagerException(e);
+        }
+    }
+
     /**
      * 修改
      */

@@ -102,6 +102,13 @@ $control.setTemplate("home:navigation.vm")
     					#set ($addURL = $homeModule.setTarget("addBatchDataMediaPair.vm").addQueryData("pipelineId", $pipelineId))
     					<a href="$addURL">批量添加</a>
     				</div>
+				#if($dataMediaPairs.size()>0 && $user.authorizeType.isAdmin() && $channel.status.isStop())
+					<div class="btn" style="float: right;">
+						#set ($removeURL = $homeModule.setAction("dataMediaPairAction").addQueryData("pipelineId", $dataMediaPairs[0].pipelineId).addQueryData("eventSubmitDoBatchDelete", "true"))
+						<a style="float: right" href="javascript:if(confirm('确实要删除该pipeline下的所有映射关系吗?'))location='$removeURL'" class="link del"><img src="images/ico_del.png" alt="" width="9" height="9" /><span class="ico_font">批量删除</span></a>
+					</div>
+				#end
+
 			#end
 
        <!--</div>-->
