@@ -34,6 +34,7 @@ import com.alibaba.otter.manager.web.common.WebConstant;
 import com.alibaba.otter.shared.common.model.config.channel.Channel;
 import com.alibaba.otter.shared.common.model.config.channel.ChannelParameter;
 import com.alibaba.otter.shared.common.model.config.channel.ChannelStatus;
+import com.alibaba.otter.shared.common.model.config.channel.QuickChannel;
 
 /**
  * 类ChannelAction.java的实现描述：用于Channel管理界面的Action
@@ -68,6 +69,33 @@ public class ChannelAction extends AbstractAction {
         channel.setParameters(parameter);
         try {
             channelService.create(channel);
+        } catch (RepeatConfigureException rce) {
+            err.setMessage("invalidChannelName");
+            return;
+        }
+        nav.redirectTo(WebConstant.CHANNEL_LIST_LINK);
+    }
+
+    /**
+     * 添加Channel
+     *
+     * @param channelInfo
+     * @param channelParameterInfo
+     * @throws Exception
+     */
+    public void doAddQuick(@FormGroup("channelInfo") Group channelInfo,
+                      @FormGroup("channelParameterInfo") Group channelParameterInfo,
+                      @FormField(name = "formChannelError", group = "channelInfo") CustomErrors err, Navigator nav)
+            throws Exception {
+        QuickChannel channel = new QuickChannel();
+        ChannelParameter parameter = new ChannelParameter();
+        channelInfo.setProperties(channel);
+        channelParameterInfo.setProperties(parameter);
+        // 新建Channel默认关闭该状态
+        channel.setStatus(ChannelStatus.STOP);
+        channel.setParameters(parameter);
+        try {
+            channelService.quickAddChannel(channel);
         } catch (RepeatConfigureException rce) {
             err.setMessage("invalidChannelName");
             return;

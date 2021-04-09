@@ -49,6 +49,12 @@ public class IbatisDataMediaPairDAO extends SqlMapClientDaoSupport implements Da
         getSqlMapClientTemplate().delete("deleteDataMediaPairById", dataMediaPairId);
     }
 
+    @Override
+    public void deleteByPipelineId(Long pipelineId) {
+        Assert.assertNotNull(pipelineId);
+        getSqlMapClientTemplate().delete("deleteDataMediaPairByPipelineId", pipelineId);
+    }
+
     public void update(DataMediaPairDO dataMediaPair) {
         Assert.assertNotNull(dataMediaPair);
         getSqlMapClientTemplate().update("updateDataMediaPair", dataMediaPair);

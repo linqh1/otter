@@ -16,10 +16,7 @@
 
 package com.alibaba.otter.manager.biz.config.datamedia.impl;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import javax.sql.DataSource;
 
@@ -60,6 +57,29 @@ public class DataMediaServiceImpl implements DataMediaService {
     @Override
     public List<String> queryColumnByMediaId(Long dataMediaId) {
         return queryColumnByMedia(findById(dataMediaId));
+    }
+
+    @Override
+    public void batchCreate(DataMediaSource source,List<DataMedia> dataMediaList) {
+        List<DataMediaDO> existsDataMediaList = dataMediaDao.listByDataMediaSourceId(source.getId());
+        Set<String> dataMediaKeySet = new HashSet<String>();
+        for (DataMediaDO dataMediaDO : existsDataMediaList) {
+            dataMediaKeySet.add(dataMediaDO.getNamespace() + "." + dataMediaDO.getName());
+        }
+        Iterator<DataMedia> newDataMediaIterator = dataMediaList.iterator();
+        while (newDataMediaIterator.hasNext()) {
+            DataMedia table = newDataMediaIterator.next();
+            String key = table.getNamespace() + "." + table.getName();
+            if (dataMediaKeySet.contains(key)) {
+                newDataMediaIterator.remove();// 删除重复的元素
+                continue;
+            }
+            table.setSource(source);
+            dataMediaKeySet.add(key);
+        }
+        for (DataMedia dataMedia : dataMediaList) {
+            create(dataMedia);
+        }
     }
 
     @Override

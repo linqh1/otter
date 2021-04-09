@@ -21,6 +21,27 @@
 		<property name="transactionTemplate">
 			<ref bean="transactionTemplate" />
 		</property>
+		<property name="dataMediaService">
+			<ref bean="dataMediaService" />
+		</property>
+		<property name="dataMediaPairService">
+			<ref bean="dataMediaPairService" />
+		</property>
+		<property name="canalService">
+			<ref bean="canalService" />
+		</property>
+		<property name="dataMediaSourceDao">
+			<ref bean="dataMediaSourceDao" />
+		</property>
+		<property name="autoKeeperClusterDao">
+			<ref bean="autoKeeperClusterDao" />
+		</property>
+		<property name="nodeDao">
+			<ref bean="nodeDao" />
+		</property>
+		<property name="canalDao">
+			<ref bean="canalDao" />
+		</property>
 	</bean>
 
 	<bean id="pipelineService" class="com.alibaba.otter.manager.biz.config.pipeline.impl.PipelineServiceImpl">

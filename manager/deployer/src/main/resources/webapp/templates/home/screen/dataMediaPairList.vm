@@ -49,26 +49,26 @@ $control.setTemplate("home:navigation.vm")
         <table border="0" cellspacing="0" cellpadding="0" class="list2 changecolor_g">
           <tr> 
             <th width="3%">序号</th>
+			<th width="10%">源数据源</th>
             <th width="10%">源表</th>
+			<th width="10%">目标数据源</th>
             <th width="10%">目标表</th>
             <th width="5%">权重</th>
-			<th width="7%">FileSize</th>
-			<th width="7%">FileCount</th>
-			<th width="7%">DeleteCount</th>
-			<th width="7%">UpdateCount</th>
-			<th width="7%">InsertCount</th>
-            <th width="10%">最后同步时间</th>
+			<th width="6%">DeleteCount</th>
+			<th width="6%">UpdateCount</th>
+			<th width="6%">InsertCount</th>
+            <th width="8%">最后同步时间</th>
 			<th width="16%">操作</th>
             
           </tr>
 		  #foreach ($dataMediaPair in $dataMediaPairs)
           <tr> 
             <td width="5%">$!dataMediaPair.id</td>
+			<td><a href="data_source_info.htm?dataMediaSourceId=$dataMediaPair.source.source.id" title="$dataMediaPair.source.source.url">$!dataMediaPair.source.source.name</a></td>
             <td width="8%"><a href="dataMediaInfo.htm?dataMediaId=$dataMediaPair.source.id">$!dataMediaPair.source.namespace.$!dataMediaPair.source.name</a></td>
+			<td><a href="data_source_info.htm?dataMediaSourceId=$dataMediaPair.target.source.id" title="$dataMediaPair.target.source.url">$!dataMediaPair.target.source.name</a></td>
 			<td><a href="dataMediaInfo.htm?dataMediaId=$dataMediaPair.target.id">$!dataMediaPair.target.namespace.$!dataMediaPair.target.name</a></td>
             <td>$!dataMediaPair.pushWeight</td>
-			<td>$!numberFormat.formatFileSize($tableStatMap.get($dataMediaPair.id).fileSize)</td>
-			<td>$!numberFormat.format($tableStatMap.get($dataMediaPair.id).fileCount)</td>
 			<td>$!numberFormat.format($tableStatMap.get($dataMediaPair.id).deleteCount)</td>
 			<td>$!numberFormat.format($tableStatMap.get($dataMediaPair.id).updateCount)</td>
 			<td>$!numberFormat.format($tableStatMap.get($dataMediaPair.id).insertCount)</td>
@@ -102,6 +102,13 @@ $control.setTemplate("home:navigation.vm")
     					#set ($addURL = $homeModule.setTarget("addBatchDataMediaPair.vm").addQueryData("pipelineId", $pipelineId))
     					<a href="$addURL">批量添加</a>
     				</div>
+				#if($dataMediaPairs.size()>0 && $user.authorizeType.isAdmin() && $channel.status.isStop())
+					<div class="btn" style="float: right;">
+						#set ($removeURL = $homeModule.setAction("dataMediaPairAction").addQueryData("pipelineId", $dataMediaPairs[0].pipelineId).addQueryData("eventSubmitDoBatchDelete", "true"))
+						<a style="float: right" href="javascript:if(confirm('确实要删除该pipeline($dataMediaPairs[0].pipelineId)下的所有映射关系吗?'))location='$removeURL'" class="link del"><img src="images/ico_del.png" alt="" width="9" height="9" /><span class="ico_font">批量删除</span></a>
+					</div>
+				#end
+
 			#end
 
        <!--</div>-->

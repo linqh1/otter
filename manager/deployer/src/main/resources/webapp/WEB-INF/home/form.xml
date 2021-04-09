@@ -38,6 +38,17 @@
 					<message>${displayName} 最少由${minLength}个字符组成，最多不能超过${maxLength}个字符</message>
 				</fm-validators:string-length-validator>
 			</field>
+			<field name="dataMedia1" displayName="数据源1"/>
+			<field name="dataMedia2" displayName="数据源2"/>
+			<field name="canal1Name" displayName="canal1名称"/>
+			<field name="canal2Name" displayName="canal2名称"/>
+			<field name="zk1Id" displayName="zk1"/>
+			<field name="zk2Id" displayName="zk2"/>
+			<field name="pipeline1Name" displayName="pipeline1名称"/>
+			<field name="pipeline2Name" displayName="pipeline2名称"/>
+			<field name="select1Nodes" displayName="select1"/>
+			<field name="select2Nodes" displayName="select2"/>
+			<field name="twoWay" displayName="是否双向同步"/>
 			<field name="status" displayName="Channel运行状态" />
 			<field name="description" displayName="Channel描述" />
 		</group>
@@ -299,6 +310,7 @@
 					<message>必须选择一个 ${displayName}</message>
 				</fm-validators:required-validator>
 			</field>
+			<field name="tables" displayName="数据表列表" />
 		</group>
 
 		<!-- - ======== - zookeeperCluster info - ======== -->

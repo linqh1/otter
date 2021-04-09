@@ -595,6 +595,9 @@ input.login_input{
 	*padding-top:10px;
 	margin-bottom:10px;
 }
+.quick-channel-width{
+	width: 155px;
+}
 .setting_box table.setting th{
 	font-weight:normal;
 	text-align:right;

@@ -34,6 +34,12 @@ import com.alibaba.otter.shared.common.model.config.data.DataMedia;
 import com.alibaba.otter.shared.common.model.config.data.DataMediaSource;
 import com.alibaba.otter.shared.common.model.config.data.db.DbMediaSource;
 import com.alibaba.otter.shared.common.model.config.data.mq.MqMediaSource;
+import org.apache.commons.lang.StringUtils;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
 
 public class DataMediaAction extends AbstractAction {
 
@@ -66,11 +72,36 @@ public class DataMediaAction extends AbstractAction {
             dataMedia.setSource((MqMediaSource) dataMediaSource);
         }
 
-        try {
-            dataMediaService.create(dataMedia);
-        } catch (RepeatConfigureException rce) {
-            err.setMessage("invalidDataMedia");
-            return;
+        String tables = dataMediaInfo.getField("tables")==null?null:dataMediaInfo.getField("tables").getStringValue();
+        if (StringUtils.isBlank(tables)) {
+            try {
+                dataMediaService.create(dataMedia);
+            } catch (RepeatConfigureException rce) {
+                err.setMessage("invalidDataMedia");
+                return;
+            }
+        }else {
+            List<String> tableList = new ArrayList<String>();
+            tableList.addAll(Arrays.asList(tables.split("\\r?\\n")));
+            Iterator<String> iterator = tableList.iterator();
+            List<DataMedia> dataMediaList = new ArrayList<DataMedia>();
+            while (iterator.hasNext()) {
+                String table = iterator.next();
+                if (StringUtils.isBlank(table)) {
+                    iterator.remove();
+                    continue;
+                }
+                int i = table.indexOf(".");
+                if (i<=0 || i>=table.length()) {
+                    throw new RuntimeException("invalid table format:" + table + ". Valid format: schemaName.tableName");
+                }
+                DataMedia dm = new DataMedia();
+                dm.setNamespace(table.substring(0,i));
+                dm.setName(table.substring(i+1,table.length()));
+                dataMediaList.add(dm);
+            }
+            dataMediaService.batchCreate(dataMedia.getSource(),dataMediaList);
+
         }
 
         nav.redirectTo(WebConstant.DATA_MEDIA_LIST_LINK);

@@ -139,4 +139,8 @@
     	delete from DATA_MEDIA_PAIR where ID = #value#
     ]]></delete>
 
+	<delete id="deleteDataMediaPairByPipelineId" parameterClass="long"><![CDATA[
+		delete from DATA_MEDIA_PAIR where PIPELINE_ID = #value#
+	]]></delete>
+
 </sqlMap>  

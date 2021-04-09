@@ -22,6 +22,7 @@ import java.util.Map;
 import com.alibaba.otter.manager.biz.common.baseservice.GenericService;
 import com.alibaba.otter.shared.common.model.config.channel.Channel;
 import com.alibaba.otter.shared.common.model.config.channel.ChannelStatus;
+import com.alibaba.otter.shared.common.model.config.channel.QuickChannel;
 
 /**
  * @author simon
@@ -49,5 +50,7 @@ public interface ChannelService extends GenericService<Channel> {
     public void notifyChannel(Long channelId);
 
     public void startChannel(Long channelId);
+
+    public void quickAddChannel(QuickChannel channel);
 
 }

@@ -77,30 +77,26 @@ public class AlarmRuleAction extends AbstractAction {
         alarmRule.setReceiverKey(systemParameter.getDefaultAlarmReceiveKey());
         alarmRule.setStatus(AlarmRuleStatus.DISABLE);
         alarmRule.setRecoveryThresold(3);
-        alarmRule.setIntervalTime(1800L);
+        alarmRule.setIntervalTime(300L);
 
         try {
             alarmRule.setMonitorName(MonitorName.EXCEPTION);
             alarmRule.setMatchValue("ERROR,EXCEPTION");
-            alarmRule.setIntervalTime(1800L);
             alarmRule.setAutoRecovery(false);
             alarmRule.setRecoveryThresold(2);
             alarmRuleService.create(alarmRule);
             alarmRule.setMonitorName(MonitorName.POSITIONTIMEOUT);
             alarmRule.setMatchValue("600");
-            alarmRule.setIntervalTime(1800L);
             alarmRule.setAutoRecovery(true);
             alarmRule.setRecoveryThresold(0);
             alarmRuleService.create(alarmRule);
             alarmRule.setMonitorName(MonitorName.DELAYTIME);
             alarmRule.setMatchValue("600");
-            alarmRule.setIntervalTime(1800L);
             alarmRule.setAutoRecovery(false);
             alarmRule.setRecoveryThresold(2);
             alarmRuleService.create(alarmRule);
             alarmRule.setMonitorName(MonitorName.PROCESSTIMEOUT);
             alarmRule.setMatchValue("60");
-            alarmRule.setIntervalTime(1800L);
             alarmRule.setAutoRecovery(true);
             alarmRule.setRecoveryThresold(2);
             alarmRuleService.create(alarmRule);

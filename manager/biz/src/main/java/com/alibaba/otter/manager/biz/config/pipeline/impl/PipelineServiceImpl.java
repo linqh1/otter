@@ -112,6 +112,7 @@ public class PipelineServiceImpl implements PipelineService {
 
                     pipelineNodeRelationDao.insertBatch(pipelineNodeRelationDos);
                     arbitrateManageService.pipelineEvent().init(pipelineDo.getChannelId(), pipelineDo.getId());
+                    pipeline.setId(pipelineDo.getId());
                 } catch (RepeatConfigureException rce) {
                     throw rce;
                 } catch (Exception e) {

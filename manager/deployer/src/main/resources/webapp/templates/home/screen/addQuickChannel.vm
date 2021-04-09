@@ -1,0 +1,201 @@
+$control.setTemplate("home:navigation.vm")
+<script language="javascript">
+<!--
+	changeNav("sync");
+//-->
+</script>
+#macro (addChannelMessage $field)
+    #if (!$field.valid) $field.message #end
+#end	
+
+<div class="main">
+  <div class="title"> 
+    <h2>快速创建同步</h2>
+  </div>
+ <div class="crumbs"><a href="channelList.htm">Channel管理</a>&nbsp;&nbsp;>&nbsp;&nbsp;<a href="add_quick_channel.htm">快速创建</a></div>
+ 
+ 
+<form name="addQuickChannelForm" method="post" enctype="multipart/form-data">
+	$csrfToken.hiddenField
+	<input type="hidden" name="action" value="channel_action"/>
+	<input type="hidden" name="event_submit_do_addQuick" value="1" />
+ <div class="setting_box">
+ 
+   #set ($channelGroup = $form.channelInfo.defaultInstance)
+   #set ($channelParameterGroup = $form.channelParameterInfo.defaultInstance)
+
+    <table cellpadding="0" cellspacing="0" class="setting_otter">
+      <tr> 
+        <th width="300">Channel Name：</th>
+        <td width="329">
+            <input type="text" name="$channelGroup.name.key" value="$!channelGroup.name.value" class="setting_input"/><span class="red">*</span>
+			<br />
+            <span>4-15个字符</span>
+			<br />
+			<span class="red">#addChannelMessage ($channelGroup.name)#addChannelMessage ($channelGroup.formChannelError)</span>
+		</td>
+      </tr>
+	  <tr> 
+        <th>同步一致性：</th>
+        <td>
+			<input name="$channelParameterGroup.syncConsistency.key" type="radio" value="MEDIA" class="radio"/>
+			基于数据库反查&nbsp;&nbsp;&nbsp;&nbsp; 
+			<input name="$channelParameterGroup.syncConsistency.key" type="radio" value="BASE" checked='checked' class="radio"/>
+			基于当前日志变更
+		</td>
+      </tr>
+      <tr> 
+        <th>同步模式：</th>
+        <td><input name="$channelParameterGroup.syncMode.key" type="radio" value="ROW" class="radio"/>
+          行记录模式&nbsp;&nbsp;&nbsp;&nbsp; 
+          <input name="$channelParameterGroup.syncMode.key" type="radio" value="FIELD" checked='checked' class="radio"/>
+          列记录模式</td>
+      </tr>
+	  <tr> 
+        <th>是否开启数据一致性：</th>
+        <td>
+			<input type="radio" name="$channelParameterGroup.enableRemedy.key" value="true" onclick="changeDisplay('enableRemedy','table-row')" class="radio"/>是
+            <input type="radio" name="$channelParameterGroup.enableRemedy.key" value="false" onclick="changeDisplay('enableRemedy','none')" checked="checked" class="radio"/>否 
+		</td>
+      </tr>
+	  <tr class="enableRemedy"> 
+        <th>一致性算法：</th>
+        <td>
+			<input name="$channelParameterGroup.remedyAlgorithm.key" type="radio" value="LOOPBACK" checked='checked' class="radio"/>
+			单向回环补救&nbsp;&nbsp;&nbsp;&nbsp; 
+			<input name="$channelParameterGroup.remedyAlgorithm.key" type="radio" value="INTERSECTION" disabled class="radio"/>
+			时间交集补救&nbsp;&nbsp;&nbsp;
+		</td>
+      </tr>
+	  <tr class="enableRemedy"> 
+        <th>一致性反查数据库延迟阀值(s)：</th>
+        <td>
+              <input name="$channelParameterGroup.remedyDelayThresoldForMedia.key" value="60" type="text" class="setting_input"/><span class="red">*</span>
+			  <br />
+			  <span class="red">#addChannelMessage ($channelParameterGroup.remedyDelayThresoldForMedia)</span>
+        </td>
+      </tr>
+      <tr>
+       <th>描述：</th>
+       <td><textarea cols="45" rows="5" name="$channelGroup.description.key">$!group.description.value</textarea><span class="red">#addChannelMessage ($channelGroup.description)</span><span class="red">*</span></td>
+      </tr>
+      <tr>
+        <th>快速创建参数：</th>
+      </tr>
+      <tr>
+        <th width="300">数据源(src->dest)</th>
+        <td>
+            <select name="$channelGroup.dataMedia1.key"  value="$!channelGroup.dataMedia1.value" class="quick-channel-width">
+                #foreach ($source in $sourceList)
+                    <option value="$!source.id">$!source.name</option>
+                #end
+            </select>
+            <span> ~ </span>
+            <select name="$channelGroup.dataMedia2.key"  value="$!channelGroup.dataMedia2.value" class="quick-channel-width">
+                #foreach ($source in $sourceList)
+                    <option value="$!source.id">$!source.name</option>
+                #end
+            </select>
+            <span class="red">*</span>
+        </td>
+        <td>必填。只支持两个数据源下有相同的数据表的情况</td>
+      </tr>
+      <tr>
+        <th width="300">canal名称</th>
+        <td>
+            <input type="text" class="quick-channel-width" placeholder="canal1名称" name="$channelGroup.canal1Name.key" value="$!channelGroup.canal1Name.value"/>
+            <span> ~ </span>
+            <input type="text" class="quick-channel-width" placeholder="canal2名称" name="$channelGroup.canal2Name.key" value="$!channelGroup.canal2Name.value"/>
+        </td>
+        <td>选填。默认：canal_${source1Name}-${source2Name}。otter限制canal名称必须要唯一，不能重复</td>
+      </tr>
+      <tr>
+          <th width="300">canal Zookeeper</th>
+          <td>
+              <select name="$channelGroup.zk1Id.key" class="quick-channel-width" value="$!channelGroup.zk1Id.value">
+                  #foreach ($zk in $zkList)
+                      <option value="$!zk.id">$!zk.clusterName</option>
+                  #end
+              </select>
+              <span> ~ </span>
+              <select name="$channelGroup.zk2Id.key" class="quick-channel-width" value="$!channelGroup.zk2Id.value">
+                  #foreach ($zk in $zkList)
+                      <option value="$!zk.id">$!zk.clusterName</option>
+                  #end
+              </select>
+              <span class="red">*</span>
+          </td>
+      </tr>
+      <tr>
+        <th width="300">pipeline名称</th>
+        <td>
+            <input type="text" class="quick-channel-width" placeholder="pipeline1名称" name="$channelGroup.pipeline1Name.key" value="$!channelGroup.pipeline1Name.value"/>
+            <span> ~ </span>
+            <input type="text" class="quick-channel-width" placeholder="pipeline2名称" name="$channelGroup.pipeline2Name.key" value="$!channelGroup.pipeline2Name.value"/>
+        </td>
+        <td>选填。默认：pipeline_${source1Name}-${source2Name}，长度限制为4-64。建议修改为两个节点的组合：la-sjc</td>
+      </tr>
+      <tr>
+          <th width="300">select/load机器</th>
+          <td>
+              <select class="quick-channel-width" name="$channelGroup.select1Nodes.key" multiple="multiple">
+                  #foreach ($node in $nodeList)
+                      <option value="$!node.id">$!node.name</option>
+                  #end
+              </select>
+              <span> ~ </span>
+              <select class="quick-channel-width" name="$channelGroup.select2Nodes.key" multiple="multiple">
+                  #foreach ($node in $nodeList)
+                      <option value="$!node.id">$!node.name</option>
+                  #end
+              </select>
+          </td>
+          <td>pipeline1的select、load机器为pipeline2的load、select机器</td>
+      </tr>
+      <tr>
+        <th width="300">是否双向同步</th>
+        <td width="329">
+            <input type="radio" name="$channelGroup.twoWay.key" checked='checked' value="true"/>是
+            <input type="radio" name="$channelGroup.twoWay.key" value="false"/>否
+        </td>
+      </tr>
+        <tr>
+            <th>tip：</th>
+        </tr>
+        <tr>
+            <th></th>
+            <td>1. 快速创建主要将几个步骤(canal,channel,pipeline,表映射关系,报警规则)合并在一个步骤完成.数据源和数据表仍需用户手动创建</td>
+        </tr>
+        <tr>
+            <th></th>
+            <td style="word-break: break-all;">
+                2. 数据表映射规则：将数据源下的所有表，按照库名+表名进行排序后，一一检查表名是否匹配(这里不检查库名是否一致)。<br/>
+                两个数据源排序后的结果如下<br/>
+                <b>source1</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>source2</b><br/>
+                apm..*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rmp..*<br/>
+                monitor.table1&nbsp;&nbsp;monitor.table1<br/>
+                monitor.table2&nbsp;&nbsp;monitor.table2<br/>
+                所以如果使用.*来创建表名的话,在快速创建成功后最好检查一下映射关系是否正确.因为apm..*和rmp..*也会被当成匹配
+            </td>
+        </tr>
+        <tr>
+            <th></th>
+            <td>3. 如果双向同步的话,默认开启ddl的pipeline是pipeline1</td>
+        </tr>
+        <tr>
+            <th></th>
+            <td>4. 如果创建失败的话，需要检查是否有脏数据生成（channel，pipeline，canal）</td>
+        </tr>
+    </table>
+ </div>
+   <div class="btn"><a href="javascript:document.addQuickChannelForm.submit();" title="创建成功后必须手动修改: 1.pipeline的select/load node 2.canal的zookeeper">保存</a></div>
+  
+  </form>
+</div>
+	
+<script language="javascript">
+<!--
+	changeDisplay('enableDetect','none')
+	changeDisplay('enableRemedy','none')
+//-->
+</script>

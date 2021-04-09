@@ -300,6 +300,7 @@ $control.setTemplate("home:navigation.vm")
   <!--常规按钮-->
 	  #if($user.authorizeType.isAdmin())
 		<div class="btn"><a href="$channelAddLink">添加</a></div>
+		<div class="btn"><a href="$channelAddQuickLink" title="快速创建一个同步">快速创建</a></div>
 	  #end
       
      <!--分页-->

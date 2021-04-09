@@ -37,6 +37,9 @@
 		<uris:turbine-uri id="channelAddLink" exposed="true" extends="homeModule">
 			<target>addChannel.vm</target>
 		</uris:turbine-uri>
+		<uris:turbine-uri id="channelAddQuickLink" exposed="true" extends="homeModule">
+			<target>addQuickChannel.vm</target>
+		</uris:turbine-uri>
 		<uris:turbine-uri id="dataMediaListLink" exposed="true"
 			extends="homeModule">
 			<target>dataMediaList.vm</target>
