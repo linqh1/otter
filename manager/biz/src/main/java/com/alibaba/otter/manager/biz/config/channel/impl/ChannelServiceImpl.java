@@ -556,10 +556,10 @@ public class ChannelServiceImpl implements ChannelService {
         // 创建channel
         create(channel);
         // 创建canal + pipeline
-        createCanalPipeline(channel,channel.getCanal1Name(), channel.getPipeline1Name(), source1, dataMedia1List,
+        createCanalPipeline(true,channel,channel.getCanal1Name(), channel.getPipeline1Name(), source1, dataMedia1List,
                 source2, dataMedia2List, zkMap.get(channel.getZk1Id()),select1Nodes,select2Nodes);
         if (channel.isTwoWay()) {
-            createCanalPipeline(channel,channel.getCanal2Name(), channel.getPipeline2Name(), source2, dataMedia2List,
+            createCanalPipeline(false,channel,channel.getCanal2Name(), channel.getPipeline2Name(), source2, dataMedia2List,
                     source1, dataMedia1List, zkMap.get(channel.getZk2Id()), select2Nodes, select1Nodes);
         }
     }
@@ -610,7 +610,7 @@ public class ChannelServiceImpl implements ChannelService {
                 jsonObject.getString("encode"));
     }
 
-    private void createCanalPipeline(QuickChannel channel, String canalName, String pipelineName,
+    private void createCanalPipeline(boolean ddl,QuickChannel channel, String canalName, String pipelineName,
                                      DataMediaSourceDO fromSource, List<DataMedia> fromDataMediaList,
                                      DataMediaSourceDO toSource, List<DataMedia> toDataMediaList,
                                      AutoKeeperClusterDO zk, List<NodeDO> selectNodes, List<NodeDO> loadNodes) {
@@ -638,6 +638,7 @@ public class ChannelServiceImpl implements ChannelService {
         pipeline.setExtractNodes(toNodeList(selectNodes));
         pipeline.setLoadNodes(toNodeList(loadNodes));
         PipelineParameter parameter = generateDefaultPipelineParameter();
+        parameter.setDdlSync(ddl);
         parameter.setDestinationName(canal.getName());
         pipeline.setParameters(parameter);
         pipelineService.create(pipeline);

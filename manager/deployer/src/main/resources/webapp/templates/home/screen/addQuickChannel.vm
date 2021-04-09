@@ -84,14 +84,14 @@ $control.setTemplate("home:navigation.vm")
       </tr>
       <tr>
         <th width="300">数据源(src->dest)</th>
-        <td width="329">
-            <select name="$channelGroup.dataMedia1.key"  value="$!channelGroup.dataMedia1.value" style="width: 160px;">
+        <td>
+            <select name="$channelGroup.dataMedia1.key"  value="$!channelGroup.dataMedia1.value" class="quick-channel-width">
                 #foreach ($source in $sourceList)
                     <option value="$!source.id">$!source.name</option>
                 #end
             </select>
             <span> ~ </span>
-            <select name="$channelGroup.dataMedia2.key"  value="$!channelGroup.dataMedia2.value" style="width: 160px;">
+            <select name="$channelGroup.dataMedia2.key"  value="$!channelGroup.dataMedia2.value" class="quick-channel-width">
                 #foreach ($source in $sourceList)
                     <option value="$!source.id">$!source.name</option>
                 #end
@@ -102,23 +102,23 @@ $control.setTemplate("home:navigation.vm")
       </tr>
       <tr>
         <th width="300">canal名称</th>
-        <td width="329">
-            <input type="text" placeholder="canal1名称" name="$channelGroup.canal1Name.key" value="$!channelGroup.canal1Name.value"/>
+        <td>
+            <input type="text" class="quick-channel-width" placeholder="canal1名称" name="$channelGroup.canal1Name.key" value="$!channelGroup.canal1Name.value"/>
             <span> ~ </span>
-            <input type="text" placeholder="canal2名称" name="$channelGroup.canal2Name.key" value="$!channelGroup.canal2Name.value"/>
+            <input type="text" class="quick-channel-width" placeholder="canal2名称" name="$channelGroup.canal2Name.key" value="$!channelGroup.canal2Name.value"/>
         </td>
         <td>选填。默认：canal_${source1Name}-${source2Name}。otter限制canal名称必须要唯一，不能重复</td>
       </tr>
       <tr>
           <th width="300">canal Zookeeper</th>
-          <td width="329">
-              <select name="$channelGroup.zk1Id.key"  value="$!channelGroup.zk1Id.value" style="width: 160px;">
+          <td>
+              <select name="$channelGroup.zk1Id.key" class="quick-channel-width" value="$!channelGroup.zk1Id.value">
                   #foreach ($zk in $zkList)
                       <option value="$!zk.id">$!zk.clusterName</option>
                   #end
               </select>
               <span> ~ </span>
-              <select name="$channelGroup.zk2Id.key"  value="$!channelGroup.zk2Id.value" style="width: 160px;">
+              <select name="$channelGroup.zk2Id.key" class="quick-channel-width" value="$!channelGroup.zk2Id.value">
                   #foreach ($zk in $zkList)
                       <option value="$!zk.id">$!zk.clusterName</option>
                   #end
@@ -128,23 +128,23 @@ $control.setTemplate("home:navigation.vm")
       </tr>
       <tr>
         <th width="300">pipeline名称</th>
-        <td width="329">
-            <input type="text" placeholder="pipeline1名称" name="$channelGroup.pipeline1Name.key" value="$!channelGroup.pipeline1Name.value"/>
+        <td>
+            <input type="text" class="quick-channel-width" placeholder="pipeline1名称" name="$channelGroup.pipeline1Name.key" value="$!channelGroup.pipeline1Name.value"/>
             <span> ~ </span>
-            <input type="text" placeholder="pipeline2名称" name="$channelGroup.pipeline2Name.key" value="$!channelGroup.pipeline2Name.value"/>
+            <input type="text" class="quick-channel-width" placeholder="pipeline2名称" name="$channelGroup.pipeline2Name.key" value="$!channelGroup.pipeline2Name.value"/>
         </td>
-        <td>选填。默认：pipeline_${source1Name}-${source2Name}。建议修改为两个节点的组合：la-sjc</td>
+        <td>选填。默认：pipeline_${source1Name}-${source2Name}，长度限制为4-64。建议修改为两个节点的组合：la-sjc</td>
       </tr>
       <tr>
           <th width="300">select/load机器</th>
-          <td width="329">
-              <select id="dltSource_l" name="$channelGroup.select1Nodes.key" multiple="multiple" style="width: 160px;">
+          <td>
+              <select class="quick-channel-width" name="$channelGroup.select1Nodes.key" multiple="multiple">
                   #foreach ($node in $nodeList)
                       <option value="$!node.id">$!node.name</option>
                   #end
               </select>
               <span> ~ </span>
-              <select id="dltSource_l" name="$channelGroup.select2Nodes.key"  multiple="multiple" style="width: 160px;">
+              <select class="quick-channel-width" name="$channelGroup.select2Nodes.key" multiple="multiple">
                   #foreach ($node in $nodeList)
                       <option value="$!node.id">$!node.name</option>
                   #end
@@ -164,11 +164,27 @@ $control.setTemplate("home:navigation.vm")
         </tr>
         <tr>
             <th></th>
-            <td>1. 批量创建只支持两个数据源下有相同的数据表的场景</td>
+            <td>1. 批量创建只支持两个数据源下有相同的数据表的场景.</td>
         </tr>
         <tr>
             <th></th>
-            <td>2. 如果创建失败的话，需要检查是否有脏数据生成（channel，pipeline，canal）</td>
+            <td style="word-break: break-all;">
+                2. 数据表映射规则：将数据源下的所有表，按照库名+表名进行排序后，一一检查表名是否匹配(这里不检查库名是否一致)。<br/>
+                两个数据源排序后的结果如下<br/>
+                <b>source1</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<b>source2</b><br/>
+                apm..*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;rmp..*<br/>
+                monitor.table1&nbsp;&nbsp;monitor.table1<br/>
+                monitor.table2&nbsp;&nbsp;monitor.table2<br/>
+                所以如果使用.*来创建表名的话,在快速创建成功后最好检查一下映射关系是否正确.因为apm..*和rmp..*也会被当成匹配
+            </td>
+        </tr>
+        <tr>
+            <th></th>
+            <td>3. 如果双向同步的话,默认开启ddl的pipeline是pipeline1</td>
+        </tr>
+        <tr>
+            <th></th>
+            <td>4. 如果创建失败的话，需要检查是否有脏数据生成（channel，pipeline，canal）</td>
         </tr>
     </table>
  </div>
