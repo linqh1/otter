@@ -25,6 +25,7 @@ import com.alibaba.otter.manager.biz.common.exceptions.InvalidConfigureException
 import com.alibaba.otter.manager.biz.common.exceptions.InvalidConfigureException.INVALID_TYPE;
 import com.alibaba.otter.manager.biz.common.exceptions.ManagerException;
 import com.alibaba.otter.manager.biz.common.exceptions.RepeatConfigureException;
+import com.alibaba.otter.manager.biz.config.alarm.AlarmRuleService;
 import com.alibaba.otter.manager.biz.config.autokeeper.dal.AutoKeeperClusterDAO;
 import com.alibaba.otter.manager.biz.config.autokeeper.dal.dataobject.AutoKeeperClusterDO;
 import com.alibaba.otter.manager.biz.config.canal.CanalService;
@@ -43,6 +44,9 @@ import com.alibaba.otter.manager.biz.config.parameter.SystemParameterService;
 import com.alibaba.otter.manager.biz.config.pipeline.PipelineService;
 import com.alibaba.otter.manager.biz.remote.ConfigRemoteService;
 import com.alibaba.otter.shared.arbitrate.ArbitrateManageService;
+import com.alibaba.otter.shared.common.model.config.alarm.AlarmRule;
+import com.alibaba.otter.shared.common.model.config.alarm.AlarmRuleStatus;
+import com.alibaba.otter.shared.common.model.config.alarm.MonitorName;
 import com.alibaba.otter.shared.common.model.config.channel.Channel;
 import com.alibaba.otter.shared.common.model.config.channel.ChannelStatus;
 import com.alibaba.otter.shared.common.model.config.channel.QuickChannel;
@@ -83,6 +87,7 @@ public class ChannelServiceImpl implements ChannelService {
     private DataMediaService       dataMediaService;
     private DataMediaPairService   dataMediaPairService;
     private CanalService           canalService;
+    private AlarmRuleService       alarmRuleService;
     private DataMediaSourceDAO     dataMediaSourceDao;
     private AutoKeeperClusterDAO   autoKeeperClusterDao;
     private NodeDAO nodeDao;
@@ -659,6 +664,39 @@ public class ChannelServiceImpl implements ChannelService {
             dataMediaPair.setResolverData(resolverData);
             dataMediaPairService.create(dataMediaPair);
         }
+        Long pipelineId = pipeline.getId();
+        SystemParameter systemParameter = systemParameterService.find();
+        AlarmRule alarmRule = new AlarmRule();
+        alarmRule.setPipelineId(pipelineId);
+        alarmRule.setDescription("one key added!");
+        alarmRule.setReceiverKey(systemParameter.getDefaultAlarmReceiveKey());
+        alarmRule.setStatus(AlarmRuleStatus.ENABLE);
+        alarmRule.setIntervalTime(300L);
+
+        try {
+            alarmRule.setMonitorName(MonitorName.EXCEPTION);
+            alarmRule.setMatchValue("ERROR,EXCEPTION");
+            alarmRule.setAutoRecovery(false);
+            alarmRule.setRecoveryThresold(2);
+            alarmRuleService.create(alarmRule);
+            alarmRule.setMonitorName(MonitorName.POSITIONTIMEOUT);
+            alarmRule.setMatchValue("600");
+            alarmRule.setAutoRecovery(true);
+            alarmRule.setRecoveryThresold(0);
+            alarmRuleService.create(alarmRule);
+            alarmRule.setMonitorName(MonitorName.DELAYTIME);
+            alarmRule.setMatchValue("600");
+            alarmRule.setAutoRecovery(false);
+            alarmRule.setRecoveryThresold(2);
+            alarmRuleService.create(alarmRule);
+            alarmRule.setMonitorName(MonitorName.PROCESSTIMEOUT);
+            alarmRule.setMatchValue("60");
+            alarmRule.setAutoRecovery(true);
+            alarmRule.setRecoveryThresold(2);
+            alarmRuleService.create(alarmRule);
+        } catch (Exception e) {
+            logger.error("create alarm rule failed:",e);
+        }
     }
 
     private List<Node> toNodeList(List<NodeDO> nodeList) {
@@ -1055,5 +1093,13 @@ public class ChannelServiceImpl implements ChannelService {
 
     public void setCanalDao(CanalDAO canalDao) {
         this.canalDao = canalDao;
+    }
+
+    public AlarmRuleService getAlarmRuleService() {
+        return alarmRuleService;
+    }
+
+    public void setAlarmRuleService(AlarmRuleService alarmRuleService) {
+        this.alarmRuleService = alarmRuleService;
     }
 }

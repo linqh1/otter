@@ -89,7 +89,7 @@ public class AlarmRuleServiceImpl implements AlarmRuleService {
     }
 
     public void disableMonitor(Long alarmRuleId, String pauseTime) {
-        switchAlarmRuleStatus(alarmRuleId, AlarmRuleStatus.ENABLE, pauseTime);
+        switchAlarmRuleStatus(alarmRuleId, AlarmRuleStatus.DISABLE, pauseTime);
     }
 
     public AlarmRule getAlarmRuleById(Long AlarmRuleId) {

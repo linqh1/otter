@@ -125,7 +125,6 @@ $control.setTemplate("home:navigation.vm")
               </select>
               <span class="red">*</span>
           </td>
-          <td>必填。优先按照id查找，查不到则按照name查找</td>
       </tr>
       <tr>
         <th width="300">pipeline名称</th>
@@ -151,7 +150,7 @@ $control.setTemplate("home:navigation.vm")
                   #end
               </select>
           </td>
-          <td>选填。默认：pipeline_${source1Name}-${source2Name}。建议修改为两个节点的组合：la-sjc</td>
+          <td>pipeline1的select、load机器为pipeline2的load、select机器</td>
       </tr>
       <tr>
         <th width="300">是否双向同步</th>

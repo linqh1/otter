@@ -18,10 +18,10 @@ package com.alibaba.otter.manager.web.home.module.screen;
 
 import com.alibaba.citrus.turbine.Context;
 import com.alibaba.citrus.turbine.Navigator;
-import com.alibaba.citrus.turbine.dataresolver.Param;
 import com.alibaba.otter.manager.biz.config.autokeeper.dal.AutoKeeperClusterDAO;
 import com.alibaba.otter.manager.biz.config.channel.ChannelService;
 import com.alibaba.otter.manager.biz.config.datamediasource.dal.DataMediaSourceDAO;
+import com.alibaba.otter.manager.biz.config.node.dal.NodeDAO;
 
 import javax.annotation.Resource;
 
@@ -33,10 +33,13 @@ public class AddQuickChannel {
     private AutoKeeperClusterDAO autoKeeperClusterDao;
     @Resource(name = "dataMediaSourceDao")
     private DataMediaSourceDAO dataMediaSourceDao;
+    @Resource(name = "nodeDao")
+    private NodeDAO nodeDao;
 
     public void execute(Context context, Navigator nav) throws Exception {
         context.put("sourceList", dataMediaSourceDao.listAll());
         context.put("zkList", autoKeeperClusterDao.listAutoKeeperClusters());
+        context.put("nodeList", nodeDao.listAll());
     }
 
 }
