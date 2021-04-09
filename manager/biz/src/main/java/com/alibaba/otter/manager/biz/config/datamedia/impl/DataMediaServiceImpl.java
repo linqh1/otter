@@ -60,23 +60,6 @@ public class DataMediaServiceImpl implements DataMediaService {
     }
 
     @Override
-    public List<DataMedia> listByDataMediaSourceName(String name) {
-        Assert.assertNotNull(name);
-        List<DataMediaDO> dataMediaDos = null;
-        try {
-            dataMediaDos = dataMediaDao.listByDataMediaSourceName(name);
-            if (dataMediaDos.isEmpty()) {
-                logger.debug("DEBUG ## couldn't query any dataMedia, maybe hasn't create any dataMedia.");
-                return new ArrayList<DataMedia>();
-            }
-        } catch (Exception e) {
-            logger.error("ERROR ## query dataMedias by name:" + name + " has an exception!");
-            throw new ManagerException(e);
-        }
-        return doToModel(dataMediaDos);
-    }
-
-    @Override
     public void batchCreate(DataMediaSource source,List<DataMedia> dataMediaList) {
         List<DataMediaDO> existsDataMediaList = dataMediaDao.listByDataMediaSourceId(source.getId());
         Set<String> dataMediaKeySet = new HashSet<String>();

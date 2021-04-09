@@ -73,13 +73,6 @@ public class IbatisDataMediaDAO extends SqlMapClientDaoSupport implements DataMe
                                                                           dataMediaSourceId);
     }
 
-    @Override
-    public List<DataMediaDO> listByDataMediaSourceName(String name) {
-        Assert.assertNotNull(name);
-        return (List<DataMediaDO>) getSqlMapClientTemplate().queryForList("listDataMediasByDataMediaSourceName",
-                name);
-    }
-
     public List<DataMediaDO> listByCondition(Map condition) {
         List<DataMediaDO> dataMediaDos = getSqlMapClientTemplate().queryForList("listDataMedias", condition);
         return dataMediaDos;

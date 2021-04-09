@@ -83,14 +83,22 @@ $control.setTemplate("home:navigation.vm")
         <th>快速创建参数：</th>
       </tr>
       <tr>
-        <th width="300">数据方向(src->dest)</th>
+        <th width="300">数据源(src->dest)</th>
         <td width="329">
-            <input type="text" placeholder="数据源1 ID/名称" name="$channelGroup.dataMedia1.key" value="$!channelGroup.dataMedia1.value"/>
+            <select name="$channelGroup.dataMedia1.key"  value="$!channelGroup.dataMedia1.value" style="width: 160px;">
+                #foreach ($source in $sourceList)
+                    <option value="$!source.id">[$!source.name]</option>
+                #end
+            </select>
             <span> ~ </span>
-            <input type="text" placeholder="数据源2 ID/名称" name="$channelGroup.dataMedia2.key" value="$!channelGroup.dataMedia2.value"/>
+            <select name="$channelGroup.dataMedia2.key"  value="$!channelGroup.dataMedia2.value" style="width: 160px;">
+                #foreach ($source in $sourceList)
+                    <option value="$!source.id">[$!source.name]</option>
+                #end
+            </select>
             <span class="red">*</span>
         </td>
-        <td>必填。优先按照id查找，查不到则按照name查找</td>
+        <td>必填。只支持两个数据源下有相同的数据表的情况</td>
       </tr>
       <tr>
         <th width="300">canal名称</th>
@@ -100,6 +108,24 @@ $control.setTemplate("home:navigation.vm")
             <input type="text" placeholder="canal2名称" name="$channelGroup.canal2Name.key" value="$!channelGroup.canal2Name.value"/>
         </td>
         <td>选填。默认：canal_${source1Name}-${source2Name}。otter限制canal名称必须要唯一，不能重复</td>
+      </tr>
+      <tr>
+          <th width="300">canal Zookeeper</th>
+          <td width="329">
+              <select name="$channelGroup.zk1Id.key"  value="$!channelGroup.zk1Id.value" style="width: 160px;">
+                  #foreach ($zk in $zkList)
+                      <option value="$!zk.id">[$!zk.clusterName]</option>
+                  #end
+              </select>
+              <span> ~ </span>
+              <select name="$channelGroup.zk2Id.key"  value="$!channelGroup.zk2Id.value" style="width: 160px;">
+                  #foreach ($zk in $zkList)
+                      <option value="$!zk.id">[$!zk.clusterName]</option>
+                  #end
+              </select>
+              <span class="red">*</span>
+          </td>
+          <td>必填。优先按照id查找，查不到则按照name查找</td>
       </tr>
       <tr>
         <th width="300">pipeline名称</th>

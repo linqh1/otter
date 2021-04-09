@@ -682,25 +682,17 @@ public class ChannelServiceImpl implements ChannelService {
         return true;
     }
 
-    private List<DataMedia> checkDataMedia(String dataMedia) {
-        if (StringUtils.isBlank(dataMedia)) {
-            throw new RuntimeException("dataMedia is required");
-        }
-        List<DataMedia> dataMediaList = null;
-        if (NumberUtils.isDigits(dataMedia)) {
-            dataMediaList = dataMediaService.listByDataMediaSourceId(Long.parseLong(dataMedia));
-        }else {
-            dataMediaList = dataMediaService.listByDataMediaSourceName(dataMedia);
-        }
+    private List<DataMedia> checkDataMedia(Long dataMediaId) {
+        List<DataMedia> dataMediaList = dataMediaService.listByDataMediaSourceId(dataMediaId);
         if (dataMediaList == null || dataMediaList.isEmpty()) {
-            throw new RuntimeException("can not found data media: " + dataMedia);
+            throw new RuntimeException("can not found data media: " + dataMediaId);
         }
         Set<Long> ids = new HashSet<Long>();
         for (DataMedia media : dataMediaList) {
             ids.add(media.getSource().getId());
         }
         if (ids.size() != 1) {
-            throw new RuntimeException(dataMedia + " match multi data media");
+            throw new RuntimeException(dataMediaId + " match multi data media");
         }
         Collections.sort(dataMediaList, new Comparator<DataMedia>() {
             @Override

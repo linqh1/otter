@@ -7,11 +7,11 @@ public class QuickChannel extends Channel {
     /**
      * 数据源1
      */
-    private String dataMedia1;
+    private Long dataMedia1;
     /**
      * 数据源2
      */
-    private String dataMedia2;
+    private Long dataMedia2;
     private String canal1Name;
     private String canal2Name;
     private String pipeline1Name;
@@ -21,19 +21,19 @@ public class QuickChannel extends Channel {
      */
     private boolean twoWay;
 
-    public String getDataMedia1() {
+    public Long getDataMedia1() {
         return dataMedia1;
     }
 
-    public void setDataMedia1(String dataMedia1) {
+    public void setDataMedia1(Long dataMedia1) {
         this.dataMedia1 = dataMedia1;
     }
 
-    public String getDataMedia2() {
+    public Long getDataMedia2() {
         return dataMedia2;
     }
 
-    public void setDataMedia2(String dataMedia2) {
+    public void setDataMedia2(Long dataMedia2) {
         this.dataMedia2 = dataMedia2;
     }
 
