@@ -498,24 +498,22 @@ public class ChannelServiceImpl implements ChannelService {
     public void quickAddChannel(QuickChannel channel) {
         Map<Long, AutoKeeperClusterDO> zkMap = getZkMap();
         if (zkMap.get(channel.getZk1Id()) == null || zkMap.get(channel.getZk2Id()) == null) {
-            throw new RuntimeException("指定的zk不存在");
+            throw new RuntimeException("no available zookeeper");
         }
         Map<Long, NodeDO> nodeMap = getNodeMap();
         List<NodeDO> select1Nodes = getNodeList(nodeMap,channel.getSelect1Nodes());
         List<NodeDO> select2Nodes = getNodeList(nodeMap,channel.getSelect2Nodes());
         if (select1Nodes.isEmpty() || select2Nodes.isEmpty()) {
-            throw new RuntimeException("select/load node 不能为空");
+            throw new RuntimeException("select/load node can not be empty");
         }
 
         List<DataMedia> dataMedia1List = checkDataMedia(channel.getDataMedia1());
         List<DataMedia> dataMedia2List = checkDataMedia(channel.getDataMedia2());
         if (dataMedia1List.get(0).getSource().getId().equals(dataMedia2List.get(0).getSource().getId())) {
-            throw new RuntimeException("数据源不能相同");
+            throw new RuntimeException("data media can not be same");
         }
-        List<String> dataMedia1Names = getAllDataMediaName(dataMedia1List);
-        List<String> dataMedia2Names = getAllDataMediaName(dataMedia2List);
-        if (!listEqual(dataMedia1Names,dataMedia2Names)) {
-            throw new RuntimeException("数据源1:" + channel.getDataMedia1() + "和数据源2:" + channel.getDataMedia2() + "的数据表不一致");
+        if (!dataMediaMatch(dataMedia1List,dataMedia2List)) {
+            throw new RuntimeException("data source1:" + channel.getDataMedia1() + "do not match data source2:" + channel.getDataMedia2());
         }
         DataMediaSourceDO source1 = dataMediaSourceDao.findById(dataMedia1List.get(0).getSource().getId());
         DataMediaSourceDO source2 = dataMediaSourceDao.findById(dataMedia2List.get(0).getSource().getId());
@@ -523,37 +521,37 @@ public class ChannelServiceImpl implements ChannelService {
         String canal1Name = getCanalName(channel.getCanal1Name(), source1, source2);
         String canal2Name = getCanalName(channel.getCanal2Name(), source2, source1);
         if (canal1Name.equalsIgnoreCase(canal2Name)) {
-            throw new RuntimeException("canal名称不能一样");
+            throw new RuntimeException("canal name can not be same");
         }
         CanalDO canal1DO = new CanalDO();
         canal1DO.setId(0L);
         canal1DO.setName(canal1Name);
         if (!canalDao.checkUnique(canal1DO)) {
-            throw new RuntimeException("canal1名称重复");
+            throw new RuntimeException("canal1 name repeat");
         }
         if (channel.isTwoWay()) {
             CanalDO canal2DO = new CanalDO();
             canal2DO.setId(0L);
             canal2DO.setName(canal2Name);
             if (!canalDao.checkUnique(canal2DO)) {
-                throw new RuntimeException("canal2名称重复");
+                throw new RuntimeException("canal2 name repeat");
             }
         }
 
         String pipeline1Name = getPipelineName(channel.getPipeline1Name(), source1, source2);
         String pipeline2Name = getPipelineName(channel.getPipeline2Name(), source2, source1);
         if (pipeline1Name.equalsIgnoreCase(pipeline2Name)) {
-            throw new RuntimeException("pipeline名称不能一样");
+            throw new RuntimeException("pipeline name can not be same");
         }
         if (pipeline1Name.length()<4 || pipeline1Name.length()>64 ||
                 pipeline2Name.length()<4 || pipeline2Name.length()>64) {
-            throw new RuntimeException("pipeline名称长度必须介于4-64之间");
+            throw new RuntimeException("pipeline length should between 4 and 64");
         }
 
         DataSourceKey fromSourceKey = parseDataSourceKey(source1.getProperties());
         DataSourceKey toSourceKey = parseDataSourceKey(source2.getProperties());
         if (!fromSourceKey.getUrl().startsWith("jdbc:mysql://") || !toSourceKey.getUrl().startsWith("jdbc:mysql://")) {
-            throw new RuntimeException("数据源必须要时MYSQL");
+            throw new RuntimeException("database must be MYSQL");
         }
         // 创建channel
         create(channel);
@@ -571,7 +569,7 @@ public class ChannelServiceImpl implements ChannelService {
         for (Long id : nodeIds) {
             NodeDO nodeDO = nodeMap.get(id);
             if (nodeDO == null) {
-                throw new RuntimeException("node 不存在");
+                throw new RuntimeException("node not exists");
             }
             result.add(nodeDO);
         }
@@ -593,7 +591,7 @@ public class ChannelServiceImpl implements ChannelService {
     private Map<Long, AutoKeeperClusterDO> getZkMap() {
         List<AutoKeeperClusterDO> zkList = autoKeeperClusterDao.listAutoKeeperClusters();
         if (zkList.isEmpty()) {
-            throw new RuntimeException("没有可用的zookeeper");
+            throw new RuntimeException("no available zookeeper");
         }
         Map<Long,AutoKeeperClusterDO> zkMap = new HashMap<Long, AutoKeeperClusterDO>();
         for (AutoKeeperClusterDO zk : zkList) {
@@ -750,21 +748,13 @@ public class ChannelServiceImpl implements ChannelService {
         return canalParameter;
     }
 
-    private List<String> getAllDataMediaName(List<DataMedia> dataMediaList) {
-        List<String> result = new ArrayList<String>();
-        for (DataMedia dm: dataMediaList) {
-            result.add(dm.getNamespace() + "." + dm.getName());// 库名.表名
-        }
-        return result;
-    }
-
-    private boolean listEqual(List<String> dataMedia1Ids, List<String> dataMedia2Ids) {
-        if (dataMedia1Ids.size() != dataMedia2Ids.size()) {
+    private boolean dataMediaMatch(List<DataMedia> dataMediaList1, List<DataMedia> dataMediaList2) {
+        if (dataMediaList1.size() != dataMediaList2.size()) {
             return false;
         }
-        int size = dataMedia1Ids.size();
+        int size = dataMediaList1.size();
         for (int i=0;i<size;i++) {
-            if (!dataMedia1Ids.get(i).equals(dataMedia2Ids.get(i))){
+            if (!dataMediaList1.get(i).getName().equals(dataMediaList2.get(i).getName())){ // 这里只判断表名是否一致
                 return false;
             }
         }
@@ -786,7 +776,9 @@ public class ChannelServiceImpl implements ChannelService {
         Collections.sort(dataMediaList, new Comparator<DataMedia>() {
             @Override
             public int compare(DataMedia o1, DataMedia o2) {
-                return o1.getName().compareTo(o2.getName());
+                String name1 = o1.getNamespace() + o1.getName();
+                String name2 = o2.getNamespace() + o2.getName();
+                return name1.compareTo(name2);
             }
         });
         return dataMediaList;
