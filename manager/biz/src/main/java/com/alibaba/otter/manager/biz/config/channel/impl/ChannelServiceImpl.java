@@ -55,7 +55,6 @@ import com.alibaba.otter.shared.common.model.config.pipeline.PipelineParameter;
 import com.alibaba.otter.shared.common.utils.Assert;
 import com.alibaba.otter.shared.common.utils.JsonUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.transaction.TransactionStatus;
@@ -492,6 +491,101 @@ public class ChannelServiceImpl implements ChannelService {
 
     @Override
     public void quickAddChannel(QuickChannel channel) {
+        Map<Long, AutoKeeperClusterDO> zkMap = getZkMap();
+        if (zkMap.get(channel.getZk1Id()) == null || zkMap.get(channel.getZk2Id()) == null) {
+            throw new RuntimeException("指定的zk不存在");
+        }
+        Map<Long, NodeDO> nodeMap = getNodeMap();
+        List<NodeDO> select1Nodes = getNodeList(nodeMap,channel.getSelect1Nodes());
+        List<NodeDO> select2Nodes = getNodeList(nodeMap,channel.getSelect2Nodes());
+        if (select1Nodes.isEmpty() || select2Nodes.isEmpty()) {
+            throw new RuntimeException("select/load node 不能为空");
+        }
+
+        List<DataMedia> dataMedia1List = checkDataMedia(channel.getDataMedia1());
+        List<DataMedia> dataMedia2List = checkDataMedia(channel.getDataMedia2());
+        if (dataMedia1List.get(0).getSource().getId().equals(dataMedia2List.get(0).getSource().getId())) {
+            throw new RuntimeException("数据源不能相同");
+        }
+        List<String> dataMedia1Names = getAllDataMediaName(dataMedia1List);
+        List<String> dataMedia2Names = getAllDataMediaName(dataMedia2List);
+        if (!listEqual(dataMedia1Names,dataMedia2Names)) {
+            throw new RuntimeException("数据源1:" + channel.getDataMedia1() + "和数据源2:" + channel.getDataMedia2() + "的数据表不一致");
+        }
+        DataMediaSourceDO source1 = dataMediaSourceDao.findById(dataMedia1List.get(0).getSource().getId());
+        DataMediaSourceDO source2 = dataMediaSourceDao.findById(dataMedia2List.get(0).getSource().getId());
+
+        String canal1Name = getCanalName(channel.getCanal1Name(), source1, source2);
+        String canal2Name = getCanalName(channel.getCanal2Name(), source2, source1);
+        if (canal1Name.equalsIgnoreCase(canal2Name)) {
+            throw new RuntimeException("canal名称不能一样");
+        }
+        CanalDO canal1DO = new CanalDO();
+        canal1DO.setId(0L);
+        canal1DO.setName(canal1Name);
+        if (!canalDao.checkUnique(canal1DO)) {
+            throw new RuntimeException("canal1名称重复");
+        }
+        if (channel.isTwoWay()) {
+            CanalDO canal2DO = new CanalDO();
+            canal2DO.setId(0L);
+            canal2DO.setName(canal2Name);
+            if (!canalDao.checkUnique(canal2DO)) {
+                throw new RuntimeException("canal2名称重复");
+            }
+        }
+
+        String pipeline1Name = getPipelineName(channel.getPipeline1Name(), source1, source2);
+        String pipeline2Name = getPipelineName(channel.getPipeline2Name(), source2, source1);
+        if (pipeline1Name.equalsIgnoreCase(pipeline2Name)) {
+            throw new RuntimeException("pipeline名称不能一样");
+        }
+        if (pipeline1Name.length()<4 || pipeline1Name.length()>64 ||
+                pipeline2Name.length()<4 || pipeline2Name.length()>64) {
+            throw new RuntimeException("pipeline名称长度必须介于4-64之间");
+        }
+
+        DataSourceKey fromSourceKey = parseDataSourceKey(source1.getProperties());
+        DataSourceKey toSourceKey = parseDataSourceKey(source2.getProperties());
+        if (!fromSourceKey.getUrl().startsWith("jdbc:mysql://") || !toSourceKey.getUrl().startsWith("jdbc:mysql://")) {
+            throw new RuntimeException("数据源必须要时MYSQL");
+        }
+        // 创建channel
+        create(channel);
+        // 创建canal + pipeline
+        createCanalPipeline(channel,channel.getCanal1Name(), channel.getPipeline1Name(), source1, dataMedia1List,
+                source2, dataMedia2List, zkMap.get(channel.getZk1Id()),select1Nodes,select2Nodes);
+        if (channel.isTwoWay()) {
+            createCanalPipeline(channel,channel.getCanal2Name(), channel.getPipeline2Name(), source2, dataMedia2List,
+                    source1, dataMedia1List, zkMap.get(channel.getZk2Id()), select2Nodes, select1Nodes);
+        }
+    }
+
+    private List<NodeDO> getNodeList(Map<Long, NodeDO> nodeMap, List<Long> nodeIds) {
+        List<NodeDO> result = new ArrayList<NodeDO>();
+        for (Long id : nodeIds) {
+            NodeDO nodeDO = nodeMap.get(id);
+            if (nodeDO == null) {
+                throw new RuntimeException("node 不存在");
+            }
+            result.add(nodeDO);
+        }
+        return result;
+    }
+
+    private Map<Long, NodeDO> getNodeMap() {
+        List<NodeDO> nodeList = nodeDao.listAll();
+        if (nodeList.isEmpty()) {
+            throw new RuntimeException("no available node");
+        }
+        Map<Long,NodeDO> nodeMap = new HashMap<Long, NodeDO>();
+        for (NodeDO nodeDO : nodeList) {
+            nodeMap.put(nodeDO.getId(),nodeDO);
+        }
+        return nodeMap;
+    }
+
+    private Map<Long, AutoKeeperClusterDO> getZkMap() {
         List<AutoKeeperClusterDO> zkList = autoKeeperClusterDao.listAutoKeeperClusters();
         if (zkList.isEmpty()) {
             throw new RuntimeException("没有可用的zookeeper");
@@ -500,65 +594,7 @@ public class ChannelServiceImpl implements ChannelService {
         for (AutoKeeperClusterDO zk : zkList) {
             zkMap.put(zk.getId(),zk);
         }
-        if (zkMap.get(channel.getZk1Id()) == null || zkMap.get(channel.getZk2Id()) == null) {
-            throw new RuntimeException("指定的zk不存在");
-        }
-        List<NodeDO> nodeList = nodeDao.listAll();
-        if (nodeList.isEmpty()) {
-            throw new RuntimeException("no available node");
-        }
-        List<DataMedia> dataMedia1List = checkDataMedia(channel.getDataMedia1());
-        List<DataMedia> dataMedia2List = checkDataMedia(channel.getDataMedia2());
-        if (dataMedia1List.get(0).getSource().getId().equals(dataMedia2List.get(0).getSource().getId())) {
-            throw new RuntimeException("two data media reference a same data media");
-        }
-        List<String> dataMedia1Names = getAllDataMediaName(dataMedia1List);
-        List<String> dataMedia2Names = getAllDataMediaName(dataMedia2List);
-        if (!listEqual(dataMedia1Names,dataMedia2Names)) {
-            throw new RuntimeException("data media 1:" + channel.getDataMedia1() + " do not match data media 2:" + channel.getDataMedia2());
-        }
-        DataMediaSourceDO source1 = dataMediaSourceDao.findById(dataMedia1List.get(0).getSource().getId());
-        DataMediaSourceDO source2 = dataMediaSourceDao.findById(dataMedia2List.get(0).getSource().getId());
-
-        String canal1Name = getCanalName(channel.getCanal1Name(), source1, source2);
-        String canal2Name = getCanalName(channel.getCanal2Name(), source2, source1);
-        if (canal1Name.equalsIgnoreCase(canal2Name)) {
-            throw new RuntimeException("canal name can not be same");
-        }
-        CanalDO canal1DO = new CanalDO();
-        canal1DO.setId(0L);
-        canal1DO.setName(canal1Name);
-        if (!canalDao.checkUnique(canal1DO)) {
-            throw new RuntimeException("canal1 name conflict");
-        }
-        if (channel.isTwoWay()) {
-            CanalDO canal2DO = new CanalDO();
-            canal2DO.setId(0L);
-            canal2DO.setName(canal2Name);
-            if (!canalDao.checkUnique(canal2DO)) {
-                throw new RuntimeException("canal2 name conflict");
-            }
-        }
-
-        String pipeline1Name = getPipelineName(channel.getPipeline1Name(), source1, source2);
-        String pipeline2Name = getPipelineName(channel.getPipeline2Name(), source2, source1);
-        if (pipeline1Name.equalsIgnoreCase(pipeline2Name)) {
-            throw new RuntimeException("pipeline name can not be same");
-        }
-
-
-        DataSourceKey fromSourceKey = parseDataSourceKey(source1.getProperties());
-        DataSourceKey toSourceKey = parseDataSourceKey(source2.getProperties());
-        if (!fromSourceKey.getUrl().startsWith("jdbc:mysql://") || !toSourceKey.getUrl().startsWith("jdbc:mysql://")) {
-            throw new RuntimeException("data source is required to MYSQL");
-        }
-        // 创建channel
-        create(channel);
-        // 创建canal + pipeline
-        createCanalPipeline(channel,channel.getCanal1Name(), channel.getPipeline1Name(), source1,dataMedia1List,source2,dataMedia2List,zkMap.get(channel.getZk1Id()),nodeList);
-        if (channel.isTwoWay()) {
-            createCanalPipeline(channel,channel.getCanal2Name(), channel.getPipeline2Name(), source2,dataMedia2List,source1,dataMedia1List,zkMap.get(channel.getZk2Id()),nodeList);
-        }
+        return zkMap;
     }
 
     private DataSourceKey parseDataSourceKey(String properties) {
@@ -574,7 +610,7 @@ public class ChannelServiceImpl implements ChannelService {
     private void createCanalPipeline(QuickChannel channel, String canalName, String pipelineName,
                                      DataMediaSourceDO fromSource, List<DataMedia> fromDataMediaList,
                                      DataMediaSourceDO toSource, List<DataMedia> toDataMediaList,
-                                     AutoKeeperClusterDO zk, List<NodeDO> nodeList) {
+                                     AutoKeeperClusterDO zk, List<NodeDO> selectNodes, List<NodeDO> loadNodes) {
         Canal canal = new Canal();
         canal.setName(getCanalName(canalName,fromSource,toSource));
         CanalParameter canalParameter = generateDefaultCanalParameter();
@@ -595,12 +631,9 @@ public class ChannelServiceImpl implements ChannelService {
         Pipeline pipeline = new Pipeline();
         pipeline.setChannelId(channel.getId());
         pipeline.setName(getPipelineName(pipelineName,fromSource,toSource));
-        Node node = new Node();
-        node.setId(nodeList.get(0).getId());// 创建后需要手动修改pipeline的select/load node
-        node.setParameters(new NodeParameter());
-        pipeline.setSelectNodes(Arrays.asList(node));
-        pipeline.setExtractNodes(Arrays.asList(node));
-        pipeline.setLoadNodes(Arrays.asList(node));
+        pipeline.setSelectNodes(toNodeList(selectNodes));
+        pipeline.setExtractNodes(toNodeList(selectNodes));
+        pipeline.setLoadNodes(toNodeList(loadNodes));
         PipelineParameter parameter = generateDefaultPipelineParameter();
         parameter.setDestinationName(canal.getName());
         pipeline.setParameters(parameter);
@@ -626,6 +659,17 @@ public class ChannelServiceImpl implements ChannelService {
             dataMediaPair.setResolverData(resolverData);
             dataMediaPairService.create(dataMediaPair);
         }
+    }
+
+    private List<Node> toNodeList(List<NodeDO> nodeList) {
+        List<Node> result = new ArrayList<Node>();
+        for (NodeDO node : nodeList) {
+            Node n = new Node();
+            n.setId(node.getId());
+            n.setParameters(new NodeParameter());
+            result.add(n);
+        }
+        return result;
     }
 
     private String getCanalName(String canalName, DataMediaSourceDO fromSource,DataMediaSourceDO toSource) {

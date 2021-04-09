@@ -46,6 +46,8 @@
 			<field name="zk2Id" displayName="zk2"/>
 			<field name="pipeline1Name" displayName="pipeline1名称"/>
 			<field name="pipeline2Name" displayName="pipeline2名称"/>
+			<field name="select1Nodes" displayName="select1"/>
+			<field name="select2Nodes" displayName="select2"/>
 			<field name="twoWay" displayName="是否双向同步"/>
 			<field name="status" displayName="Channel运行状态" />
 			<field name="description" displayName="Channel描述" />

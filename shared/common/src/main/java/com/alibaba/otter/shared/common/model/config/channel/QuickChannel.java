@@ -1,5 +1,7 @@
 package com.alibaba.otter.shared.common.model.config.channel;
 
+import java.util.List;
+
 /**
  * 快速创建channel
  */
@@ -18,6 +20,8 @@ public class QuickChannel extends Channel {
     private Long zk2Id;
     private String pipeline1Name;
     private String pipeline2Name;
+    private List<Long> select1Nodes;
+    private List<Long> select2Nodes;
     /**
      * 是否双向同步
      */
@@ -93,5 +97,21 @@ public class QuickChannel extends Channel {
 
     public void setZk2Id(Long zk2Id) {
         this.zk2Id = zk2Id;
+    }
+
+    public List<Long> getSelect1Nodes() {
+        return select1Nodes;
+    }
+
+    public void setSelect1Nodes(List<Long> select1Nodes) {
+        this.select1Nodes = select1Nodes;
+    }
+
+    public List<Long> getSelect2Nodes() {
+        return select2Nodes;
+    }
+
+    public void setSelect2Nodes(List<Long> select2Nodes) {
+        this.select2Nodes = select2Nodes;
     }
 }

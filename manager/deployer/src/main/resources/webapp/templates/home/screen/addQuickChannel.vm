@@ -137,6 +137,23 @@ $control.setTemplate("home:navigation.vm")
         <td>选填。默认：pipeline_${source1Name}-${source2Name}。建议修改为两个节点的组合：la-sjc</td>
       </tr>
       <tr>
+          <th width="300">select/load机器</th>
+          <td width="329">
+              <select id="dltSource_l" name="$channelGroup.select1Nodes.key" multiple="multiple" style="width: 160px;">
+                  #foreach ($node in $nodeList)
+                      <option value="$!node.id">$!node.name</option>
+                  #end
+              </select>
+              <span> ~ </span>
+              <select id="dltSource_l" name="$channelGroup.select2Nodes.key"  multiple="multiple" style="width: 160px;">
+                  #foreach ($node in $nodeList)
+                      <option value="$!node.id">$!node.name</option>
+                  #end
+              </select>
+          </td>
+          <td>选填。默认：pipeline_${source1Name}-${source2Name}。建议修改为两个节点的组合：la-sjc</td>
+      </tr>
+      <tr>
         <th width="300">是否双向同步</th>
         <td width="329">
             <input type="radio" name="$channelGroup.twoWay.key" checked='checked' value="true"/>是
