@@ -49,7 +49,9 @@ $control.setTemplate("home:navigation.vm")
         <table border="0" cellspacing="0" cellpadding="0" class="list2 changecolor_g">
           <tr> 
             <th width="3%">序号</th>
+			<th width="5%">源数据源</th>
             <th width="10%">源表</th>
+			<th width="5%">目标数据源</th>
             <th width="10%">目标表</th>
             <th width="5%">权重</th>
 			<th width="7%">FileSize</th>
@@ -64,7 +66,9 @@ $control.setTemplate("home:navigation.vm")
 		  #foreach ($dataMediaPair in $dataMediaPairs)
           <tr> 
             <td width="5%">$!dataMediaPair.id</td>
+			<td><a href="data_source_info.htm?dataMediaSourceId=$dataMediaPair.source.source.id" title="$dataMediaPair.source.source.url">$!dataMediaPair.source.source.name</a></td>
             <td width="8%"><a href="dataMediaInfo.htm?dataMediaId=$dataMediaPair.source.id">$!dataMediaPair.source.namespace.$!dataMediaPair.source.name</a></td>
+			<td><a href="data_source_info.htm?dataMediaSourceId=$dataMediaPair.target.source.id" title="$dataMediaPair.target.source.url">$!dataMediaPair.target.source.name</a></td>
 			<td><a href="dataMediaInfo.htm?dataMediaId=$dataMediaPair.target.id">$!dataMediaPair.target.namespace.$!dataMediaPair.target.name</a></td>
             <td>$!dataMediaPair.pushWeight</td>
 			<td>$!numberFormat.formatFileSize($tableStatMap.get($dataMediaPair.id).fileSize)</td>
