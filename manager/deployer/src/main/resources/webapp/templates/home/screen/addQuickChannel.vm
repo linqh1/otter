@@ -87,13 +87,13 @@ $control.setTemplate("home:navigation.vm")
         <td width="329">
             <select name="$channelGroup.dataMedia1.key"  value="$!channelGroup.dataMedia1.value" style="width: 160px;">
                 #foreach ($source in $sourceList)
-                    <option value="$!source.id">[$!source.name]</option>
+                    <option value="$!source.id">$!source.name</option>
                 #end
             </select>
             <span> ~ </span>
             <select name="$channelGroup.dataMedia2.key"  value="$!channelGroup.dataMedia2.value" style="width: 160px;">
                 #foreach ($source in $sourceList)
-                    <option value="$!source.id">[$!source.name]</option>
+                    <option value="$!source.id">$!source.name</option>
                 #end
             </select>
             <span class="red">*</span>
@@ -114,13 +114,13 @@ $control.setTemplate("home:navigation.vm")
           <td width="329">
               <select name="$channelGroup.zk1Id.key"  value="$!channelGroup.zk1Id.value" style="width: 160px;">
                   #foreach ($zk in $zkList)
-                      <option value="$!zk.id">[$!zk.clusterName]</option>
+                      <option value="$!zk.id">$!zk.clusterName</option>
                   #end
               </select>
               <span> ~ </span>
               <select name="$channelGroup.zk2Id.key"  value="$!channelGroup.zk2Id.value" style="width: 160px;">
                   #foreach ($zk in $zkList)
-                      <option value="$!zk.id">[$!zk.clusterName]</option>
+                      <option value="$!zk.id">$!zk.clusterName</option>
                   #end
               </select>
               <span class="red">*</span>
@@ -144,19 +144,15 @@ $control.setTemplate("home:navigation.vm")
         </td>
       </tr>
         <tr>
-            <th>创建完成后,需要：</th>
+            <th>tip：</th>
         </tr>
         <tr>
             <th></th>
-            <td>1. 手动修改pipeline的select/load机器</td>
+            <td>1. 批量创建只支持两个数据源下有相同的数据表的场景</td>
         </tr>
         <tr>
             <th></th>
-            <td>2. 手动修改canal的zookeeper</td>
-        </tr>
-        <tr>
-            <th></th>
-            <td>3. 如果创建失败的话，需要检查是否有脏数据生成（channel，pipeline，canal）</td>
+            <td>2. 如果创建失败的话，需要检查是否有脏数据生成（channel，pipeline，canal）</td>
         </tr>
     </table>
  </div>

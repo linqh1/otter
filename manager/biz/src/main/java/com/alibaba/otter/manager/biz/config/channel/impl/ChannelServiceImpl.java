@@ -494,7 +494,14 @@ public class ChannelServiceImpl implements ChannelService {
     public void quickAddChannel(QuickChannel channel) {
         List<AutoKeeperClusterDO> zkList = autoKeeperClusterDao.listAutoKeeperClusters();
         if (zkList.isEmpty()) {
-            throw new RuntimeException("no available zookeeper");
+            throw new RuntimeException("没有可用的zookeeper");
+        }
+        Map<Long,AutoKeeperClusterDO> zkMap = new HashMap<Long, AutoKeeperClusterDO>();
+        for (AutoKeeperClusterDO zk : zkList) {
+            zkMap.put(zk.getId(),zk);
+        }
+        if (zkMap.get(channel.getZk1Id()) == null || zkMap.get(channel.getZk2Id()) == null) {
+            throw new RuntimeException("指定的zk不存在");
         }
         List<NodeDO> nodeList = nodeDao.listAll();
         if (nodeList.isEmpty()) {
@@ -548,9 +555,9 @@ public class ChannelServiceImpl implements ChannelService {
         // 创建channel
         create(channel);
         // 创建canal + pipeline
-        createCanalPipeline(channel,channel.getCanal1Name(), channel.getPipeline1Name(), source1,dataMedia1List,source2,dataMedia2List,zkList,nodeList);
+        createCanalPipeline(channel,channel.getCanal1Name(), channel.getPipeline1Name(), source1,dataMedia1List,source2,dataMedia2List,zkMap.get(channel.getZk1Id()),nodeList);
         if (channel.isTwoWay()) {
-            createCanalPipeline(channel,channel.getCanal2Name(), channel.getPipeline2Name(), source2,dataMedia2List,source1,dataMedia1List,zkList,nodeList);
+            createCanalPipeline(channel,channel.getCanal2Name(), channel.getPipeline2Name(), source2,dataMedia2List,source1,dataMedia1List,zkMap.get(channel.getZk2Id()),nodeList);
         }
     }
 
@@ -567,7 +574,7 @@ public class ChannelServiceImpl implements ChannelService {
     private void createCanalPipeline(QuickChannel channel, String canalName, String pipelineName,
                                      DataMediaSourceDO fromSource, List<DataMedia> fromDataMediaList,
                                      DataMediaSourceDO toSource, List<DataMedia> toDataMediaList,
-                                     List<AutoKeeperClusterDO> zkList, List<NodeDO> nodeList) {
+                                     AutoKeeperClusterDO zk, List<NodeDO> nodeList) {
         Canal canal = new Canal();
         canal.setName(getCanalName(canalName,fromSource,toSource));
         CanalParameter canalParameter = generateDefaultCanalParameter();
@@ -578,7 +585,7 @@ public class ChannelServiceImpl implements ChannelService {
         InetSocketAddress address = new InetSocketAddress(addrInfo[0], Integer.valueOf(addrInfo[1]));
         CanalParameter.DataSourcing dataSourcing = new CanalParameter.DataSourcing(CanalParameter.SourcingType.MYSQL,address);
         canalParameter.setGroupDbAddresses(Arrays.asList(Arrays.asList(dataSourcing)));
-        canalParameter.setZkClusterId(zkList.get(0).getId());// 创建后需要手动修改canal的zk
+        canalParameter.setZkClusterId(zk.getId());
 
         canal.setCanalParameter(canalParameter);
         canalService.create(canal);

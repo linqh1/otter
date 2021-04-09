@@ -14,6 +14,8 @@ public class QuickChannel extends Channel {
     private Long dataMedia2;
     private String canal1Name;
     private String canal2Name;
+    private Long zk1Id;
+    private Long zk2Id;
     private String pipeline1Name;
     private String pipeline2Name;
     /**
@@ -75,5 +77,21 @@ public class QuickChannel extends Channel {
 
     public void setPipeline2Name(String pipeline2Name) {
         this.pipeline2Name = pipeline2Name;
+    }
+
+    public Long getZk1Id() {
+        return zk1Id;
+    }
+
+    public void setZk1Id(Long zk1Id) {
+        this.zk1Id = zk1Id;
+    }
+
+    public Long getZk2Id() {
+        return zk2Id;
+    }
+
+    public void setZk2Id(Long zk2Id) {
+        this.zk2Id = zk2Id;
     }
 }
