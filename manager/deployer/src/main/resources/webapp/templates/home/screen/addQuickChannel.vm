@@ -164,7 +164,7 @@ $control.setTemplate("home:navigation.vm")
         </tr>
         <tr>
             <th></th>
-            <td>1. 批量创建只支持两个数据源下有相同的数据表的场景.</td>
+            <td>1. 快速创建主要将几个步骤(canal,channel,pipeline,表映射关系,报警规则)合并在一个步骤完成.数据源和数据表仍需用户手动创建</td>
         </tr>
         <tr>
             <th></th>
