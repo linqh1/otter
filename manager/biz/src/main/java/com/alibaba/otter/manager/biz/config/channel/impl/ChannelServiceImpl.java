@@ -644,6 +644,7 @@ public class ChannelServiceImpl implements ChannelService {
         pipelineService.create(pipeline);
 
         int size = fromDataMediaList.size();
+        List<DataMediaPair> pairList = new ArrayList<DataMediaPair>();
         for (int i=0;i<size;i++) {
             DataMedia fromDataMedia = fromDataMediaList.get(i);
             DataMedia toDataMedia = toDataMediaList.get(i);
@@ -661,8 +662,9 @@ public class ChannelServiceImpl implements ChannelService {
             resolverData.setExtensionDataType(ExtensionDataType.CLAZZ);
             resolverData.setClazzPath("");
             dataMediaPair.setResolverData(resolverData);
-            dataMediaPairService.create(dataMediaPair);
+            pairList.add(dataMediaPair);
         }
+        dataMediaPairService.batchCreate(pairList);
         Long pipelineId = pipeline.getId();
         SystemParameter systemParameter = systemParameterService.find();
         AlarmRule alarmRule = new AlarmRule();

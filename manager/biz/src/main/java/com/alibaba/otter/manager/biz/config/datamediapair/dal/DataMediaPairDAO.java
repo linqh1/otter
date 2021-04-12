@@ -31,4 +31,6 @@ public interface DataMediaPairDAO extends GenericDAO<DataMediaPairDO> {
     public List<DataMediaPairDO> listByDataMediaId(Long dataMediaId);
 
     void deleteByPipelineId(Long pipelineId);
+
+    void batchInsert(List<DataMediaPairDO> pairList);
 }
