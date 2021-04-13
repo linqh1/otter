@@ -37,4 +37,6 @@ public interface DataMediaPairService extends GenericService<DataMediaPair> {
     public boolean createIfNotExist(DataMediaPair dataMediaPair);
 
     void removeByPipelineId(Long pipelineId);
+
+    void batchCreate(List<DataMediaPair> pairList);
 }

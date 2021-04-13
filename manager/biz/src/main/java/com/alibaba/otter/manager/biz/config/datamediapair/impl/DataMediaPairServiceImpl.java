@@ -63,6 +63,17 @@ public class DataMediaPairServiceImpl implements DataMediaPairService {
         createAndReturnId(dataMediaPair);
     }
 
+    @Override
+    public void batchCreate(List<DataMediaPair> pairList) {
+        Assert.assertNotNull(pairList);
+        List<DataMediaPairDO> list = new ArrayList<DataMediaPairDO>();
+        for (DataMediaPair dataMediaPair : pairList) {
+            DataMediaPairDO dataMediaPairDo = modelToDo(dataMediaPair);
+            list.add(dataMediaPairDo);
+        }
+        dataMediaPairDao.batchInsert(list);
+    }
+
     /**
      * 添加并返回插入的id
      */

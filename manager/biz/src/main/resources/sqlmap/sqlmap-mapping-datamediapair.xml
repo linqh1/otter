@@ -42,7 +42,7 @@
 	<select id="listDataMediaPairs" resultMap="dataMediaPairResult">
 		select
 		<include refid="allDataMediaPairColumns" />
-		from DATA_MEDIA_PAIR 
+		from DATA_MEDIA_PAIR
 		<dynamic prepend="where">
 			<isNotEmpty property="searchKey">
 			NAME like concat('%',replace(#searchKey#,'_','\_'),'%') 
@@ -123,6 +123,24 @@
 		<selectKey keyProperty="id" resultClass="long">
 			select last_insert_id()
 		</selectKey>
+	</insert>
+
+	<insert id="batchInsertDataMediaPair" parameterClass="java.util.List">
+		insert into DATA_MEDIA_PAIR
+		(SOURCE_DATA_MEDIA_ID,TARGET_DATA_MEDIA_ID,PULLWEIGHT,PUSHWEIGHT,FILTER,RESOLVER,PIPELINE_ID,COLUMN_PAIR_MODE,GMT_CREATE,GMT_MODIFIED)
+		values
+		<iterate conjunction=",">
+			(#list[].sourceDataMediaId#
+			,#list[].targetDataMediaId#
+			,#list[].pullWeight#
+			,#list[].pushWeight#
+			,#list[].filter#
+			,#list[].resolver#
+			,#list[].pipelineId#
+			,#list[].columnPairMode#
+			,now()
+			,now())
+		</iterate>
 	</insert>
 <!-- 
 	<insert id="insertDataMediaPair" parameterClass="dataMediaPair">

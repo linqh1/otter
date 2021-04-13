@@ -39,6 +39,12 @@ public class IbatisDataMediaPairDAO extends SqlMapClientDaoSupport implements Da
         return dataMediaPair;
     }
 
+    @Override
+    public void batchInsert(List<DataMediaPairDO> list) {
+        Assert.assertNotNull(list);
+        getSqlMapClientTemplate().insert("batchInsertDataMediaPair", list);
+    }
+
     public void insertColumnPairs(List<ColumnPair> ColumnPairs) {
         Assert.assertNotNull(ColumnPairs);
         getSqlMapClientTemplate().insert("insertColumnPairs", ColumnPairs);
